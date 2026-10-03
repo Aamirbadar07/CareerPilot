@@ -1,0 +1,32 @@
+ASHA VERMA
+Generative AI Developer
+Pune, India | asha.verma@example.com | +91 90000 00000 | linkedin.com/in/asha-verma-example | github.com/asha-verma-example
+
+SUMMARY
+Entry-level AI engineer with internship experience building LLM applications in Python. Comfortable taking a retrieval feature from prototype to a deployed FastAPI service.
+
+SKILLS
+Languages: Python, SQL, JavaScript
+AI/ML: LangChain, RAG, Prompt Engineering, Sentence Transformers
+Backend: FastAPI, PostgreSQL, Docker
+Tools: Git, GitHub Actions
+
+EXPERIENCE
+AI Engineering Intern, Kestrel Data Labs (Remote)    Feb 2026 - Jun 2026
+- Built a RAG chatbot over 1,200 internal support documents using LangChain and FastAPI, cutting average answer lookup time from 6 minutes to under 1 minute.
+- Responsible for writing prompt templates for the support assistant.
+- Added an evaluation script that scored 150 question-answer pairs for groundedness, catching 18 hallucinated answers before release.
+
+PROJECTS
+DocQuery - PDF question answering app    Aug 2025
+- Built a FastAPI service that answers questions over uploaded PDFs using embeddings stored in PostgreSQL with pgvector.
+- Containerised the service with Docker and deployed it with a GitHub Actions pipeline.
+
+ResumeRank - resume screening tool    Mar 2025
+- Worked on a Python script that ranks resumes against a job description using sentence-transformer embeddings.
+
+EDUCATION
+B.Tech in Computer Science, Pune Institute of Technology    2022 - 2026    CGPA 8.4
+
+CERTIFICATIONS
+AWS Certified Cloud Practitioner, Amazon Web Services, Sep 2025

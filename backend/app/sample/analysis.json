@@ -1,0 +1,141 @@
+{
+  "master_profile": {
+    "profile_id": "sample",
+    "version": 1,
+    "updated_at": "2026-10-03T09:00:00Z",
+    "identity": {
+      "full_name": "Asha Verma",
+      "title_line": "Generative AI Developer",
+      "location": "Pune, India",
+      "email": "asha.verma@example.com",
+      "phone": "+91 90000 00000",
+      "linkedin": "linkedin.com/in/asha-verma-example",
+      "github": "github.com/asha-verma-example",
+      "portfolio": null
+    },
+    "summary_source": "Entry-level AI engineer with internship experience building LLM applications in Python. Comfortable taking a retrieval feature from prototype to a deployed FastAPI service.",
+    "skills": [
+      { "name": "Python", "category": "language", "evidence": ["exp_1", "pb_1", "pb_3"], "level": "intermediate", "first_seen": "2025-03", "verified": false },
+      { "name": "RAG", "category": "ai", "evidence": ["b_1"], "level": "intermediate", "first_seen": "2026-02", "verified": false },
+      { "name": "LangChain", "category": "ai", "evidence": ["b_1"], "level": "intermediate", "first_seen": "2026-02", "verified": false },
+      { "name": "Prompt Engineering", "category": "ai", "evidence": ["b_2"], "level": "beginner", "first_seen": "2026-02", "verified": false },
+      { "name": "LLM Evaluation", "category": "ai", "evidence": ["b_3"], "level": "beginner", "first_seen": "2026-02", "verified": false },
+      { "name": "Sentence Transformers", "category": "ai", "evidence": ["pb_3"], "level": "beginner", "first_seen": "2025-03", "verified": false },
+      { "name": "FastAPI", "category": "backend", "evidence": ["b_1", "pb_1"], "level": "intermediate", "first_seen": "2025-08", "verified": false },
+      { "name": "PostgreSQL", "category": "backend", "evidence": ["pb_1"], "level": "beginner", "first_seen": "2025-08", "verified": false },
+      { "name": "pgvector", "category": "backend", "evidence": ["pb_1"], "level": "beginner", "first_seen": "2025-08", "verified": false },
+      { "name": "Docker", "category": "devops", "evidence": ["pb_2"], "level": "beginner", "first_seen": "2025-08", "verified": false },
+      { "name": "GitHub Actions", "category": "devops", "evidence": ["pb_2"], "level": "beginner", "first_seen": "2025-08", "verified": false },
+      { "name": "AWS Cloud Fundamentals", "category": "cloud", "evidence": ["cert_1"], "level": "beginner", "first_seen": "2025-09", "verified": false }
+    ],
+    "experience": [
+      {
+        "id": "exp_1",
+        "company": "Kestrel Data Labs",
+        "role": "AI Engineering Intern",
+        "employment_type": "internship",
+        "location": null,
+        "remote": true,
+        "start": "2026-02",
+        "end": "2026-06",
+        "current": false,
+        "bullets": [
+          { "id": "b_1", "text": "Built a RAG chatbot over 1,200 internal support documents using LangChain and FastAPI, cutting average answer lookup time from 6 minutes to under 1 minute.", "skills": ["RAG", "LangChain", "FastAPI", "Python"], "metric": "lookup time from 6 minutes to under 1 minute; 1,200 documents", "impact_verb": "built" },
+          { "id": "b_2", "text": "Responsible for writing prompt templates for the support assistant.", "skills": ["Prompt Engineering"], "metric": null, "impact_verb": null },
+          { "id": "b_3", "text": "Added an evaluation script that scored 150 question-answer pairs for groundedness, catching 18 hallucinated answers before release.", "skills": ["LLM Evaluation", "Python"], "metric": "150 question-answer pairs; 18 hallucinated answers caught", "impact_verb": "added" }
+        ],
+        "tech": ["LangChain", "FastAPI", "Python"]
+      }
+    ],
+    "projects": [
+      {
+        "id": "proj_1",
+        "name": "DocQuery",
+        "one_liner": "PDF question answering app",
+        "bullets": [
+          { "id": "pb_1", "text": "Built a FastAPI service that answers questions over uploaded PDFs using embeddings stored in PostgreSQL with pgvector.", "skills": ["FastAPI", "PostgreSQL", "pgvector", "Python"] },
+          { "id": "pb_2", "text": "Containerised the service with Docker and deployed it with a GitHub Actions pipeline.", "skills": ["Docker", "GitHub Actions"] }
+        ],
+        "tech": ["FastAPI", "PostgreSQL", "pgvector", "Docker", "GitHub Actions"],
+        "repo_url": null,
+        "live_url": null,
+        "date": "2025-08"
+      },
+      {
+        "id": "proj_2",
+        "name": "ResumeRank",
+        "one_liner": "resume screening tool",
+        "bullets": [
+          { "id": "pb_3", "text": "Worked on a Python script that ranks resumes against a job description using sentence-transformer embeddings.", "skills": ["Python", "Sentence Transformers"] }
+        ],
+        "tech": ["Python", "Sentence Transformers"],
+        "repo_url": null,
+        "live_url": null,
+        "date": "2025-03"
+      }
+    ],
+    "education": [
+      { "degree": "B.Tech", "field": "Computer Science", "institution": "Pune Institute of Technology", "start": "2022", "end": "2026", "score": "8.4", "score_type": "CGPA" }
+    ],
+    "certifications": [
+      { "id": "cert_1", "name": "AWS Certified Cloud Practitioner", "issuer": "Amazon Web Services", "issued": "2025-09", "expires": null, "credential_id": null, "credential_url": null, "skills_covered": ["AWS Cloud Fundamentals"], "verified": false, "source": "upload" }
+    ],
+    "achievements": [],
+    "target_roles": [
+      { "title": "Generative AI Developer", "seniority": "entry", "keywords": ["RAG", "LangChain", "LLM", "Python", "FastAPI"], "priority": 1 },
+      { "title": "AI Engineer", "seniority": "entry", "keywords": ["LLM", "Python", "evaluation", "RAG"], "priority": 2 },
+      { "title": "Python Backend Developer", "seniority": "entry", "keywords": ["FastAPI", "PostgreSQL", "Docker"], "priority": 3 }
+    ],
+    "preferences": {
+      "remote_only": true,
+      "locations": ["Pune"],
+      "min_salary": null,
+      "currency": "INR",
+      "employment_types": ["full-time", "internship"],
+      "exclude_companies": []
+    }
+  },
+  "ats": {
+    "score": 73,
+    "components": [
+      { "name": "parseability", "score": 22, "max": 25, "why": "Single column, standard section names and plain bullets parse cleanly. Dates are consistent. The contact line packs five items into one row, which some parsers split badly." },
+      { "name": "keyword coverage", "score": 17, "max": 25, "why": "RAG, LangChain, FastAPI and LLM evaluation are present. Agents, tool calling, vector database and CI/CD never appear, although the work described would justify the last two." },
+      { "name": "impact bullets", "score": 12, "max": 20, "why": "Two of six bullets carry a measured result. Two open with weak verbs and state a duty. Two describe what was built with no outcome." },
+      { "name": "structure/consistency", "score": 12, "max": 15, "why": "Sections are in a sensible order. JavaScript, SQL and Git are listed as skills but no bullet shows them being used." },
+      { "name": "length/density", "score": 10, "max": 15, "why": "The page is about two thirds full. One internship and two projects leave room for more detail on each." }
+    ]
+  },
+  "weak_bullets": [
+    {
+      "bullet_id": "b_2",
+      "problem": "Opens with \"Responsible for\" and states a duty. It gives no result and no scale.",
+      "rewrite": "Wrote the prompt templates used by the support assistant.",
+      "needs_from_user": "How many templates did you write, and did answer quality change after you introduced them? Give a number only if you measured one."
+    },
+    {
+      "bullet_id": "pb_3",
+      "problem": "Opens with \"Worked on\", which hides what you personally built. It gives no result.",
+      "rewrite": "Built a Python script that ranks resumes against a job description using sentence-transformer embeddings.",
+      "needs_from_user": "How many resumes did you run it on, and how did its ranking compare with a manual one?"
+    }
+  ],
+  "missing_keywords": [
+    { "keyword": "CI/CD", "for_role": "Generative AI Developer", "severity": "medium" },
+    { "keyword": "vector database", "for_role": "Generative AI Developer", "severity": "medium" },
+    { "keyword": "agents / tool calling", "for_role": "AI Engineer", "severity": "high" },
+    { "keyword": "testing (pytest)", "for_role": "Python Backend Developer", "severity": "medium" }
+  ],
+  "target_roles": [
+    { "title": "Generative AI Developer", "confidence": 0.8, "evidence": ["b_1", "b_3", "pb_1"] },
+    { "title": "AI Engineer", "confidence": 0.7, "evidence": ["b_1", "b_3"] },
+    { "title": "Python Backend Developer", "confidence": 0.55, "evidence": ["pb_1", "pb_2"] }
+  ],
+  "top_gaps": [
+    { "gap": "No public demo or repository link for any project", "blocks": "A reviewer cannot check the RAG and FastAPI claims, which are the core of every target role.", "smallest_action": "Push DocQuery to a public repository, deploy it on a free tier and put both links on the resume." },
+    { "gap": "Five months of experience from a single internship", "blocks": "Postings that ask for one or more years will screen this resume out.", "smallest_action": "Target roles marked entry, graduate or intern-to-hire, and expand the internship bullets with scope." },
+    { "gap": "JavaScript, SQL and Git are listed with no supporting bullet", "blocks": "An interviewer will probe them, and unsupported skills weaken the supported ones.", "smallest_action": "Add one bullet that shows each in use, or remove them from the skills line." },
+    { "gap": "No agent or tool-calling work", "blocks": "AI Engineer postings increasingly list agents as a requirement.", "smallest_action": "Add one tool-calling feature to DocQuery and describe it in a bullet." },
+    { "gap": "Cloud knowledge is a certificate only", "blocks": "Postings that ask for hands-on AWS will not count a fundamentals certificate.", "smallest_action": "Deploy DocQuery on AWS and name the services used." }
+  ],
+  "overall_verdict": "A credible entry-level profile for Generative AI Developer roles: the internship shows a real RAG system with measured results. It is held back by two duty-style bullets, three skills with nothing behind them and no link a reviewer can click. Fix the links first; that is one evening of work."
+}

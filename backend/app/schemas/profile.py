@@ -4,7 +4,8 @@ from pydantic import BaseModel, ConfigDict
 
 
 class _Strict(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    # numbers-to-str: a model may emit a CGPA or a metric as a bare number
+    model_config = ConfigDict(extra="forbid", coerce_numbers_to_str=True)
 
 
 class Identity(_Strict):
@@ -137,5 +138,5 @@ class MasterProfile(_Strict):
     certifications: list[Certification] = []
     achievements: list[Achievement] = []
     target_roles: list[TargetRole] = []
-    preferences: Preferences
-    provenance: Provenance
+    preferences: Preferences = Preferences()
+    provenance: Provenance = Provenance()
