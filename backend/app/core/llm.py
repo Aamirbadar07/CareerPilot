@@ -6,6 +6,9 @@ from collections.abc import Callable
 from typing import Protocol, TypeVar
 
 import anthropic
+from google import genai
+from google.genai import errors as genai_errors
+from google.genai import types as genai_types
 from pydantic import BaseModel, ValidationError
 
 from app.core.config import settings
@@ -43,15 +46,29 @@ def _problems(e: Exception) -> str:
 
 
 class LLM:
-    def __init__(self, client: anthropic.Anthropic | None = None, cache: Cache | None = None):
+    """One model behind every agent. LLM_PROVIDER picks Anthropic (the default the prompts
+    were written for) or Google Gemini; everything above `_raw` is provider-neutral."""
+
+    def __init__(self, client=None, cache: Cache | None = None):
         self._client = client
         self.cache = cache
-        self.model = settings.anthropic_model
+        self.provider = settings.llm_provider
+        google = self.provider == "google"
+        self.model = settings.google_model if google else settings.anthropic_model
         # Token totals for cost reporting (eval/run_eval.py). Fit scoring calls from threads.
         self.usage = {"calls": 0, "input_tokens": 0, "output_tokens": 0}
         self._usage_lock = threading.Lock()
 
     def _raw(self, system: str, messages: list[dict]) -> str:
+        call = self._google if self.provider == "google" else self._anthropic
+        text, tokens_in, tokens_out = call(system, messages)
+        with self._usage_lock:
+            self.usage["calls"] += 1
+            self.usage["input_tokens"] += tokens_in
+            self.usage["output_tokens"] += tokens_out
+        return text
+
+    def _anthropic(self, system: str, messages: list[dict]) -> tuple[str, int, int]:
         if self._client is None:
             # api_key=None lets the SDK resolve credentials from the environment
             self._client = anthropic.Anthropic(
@@ -69,13 +86,43 @@ class LLM:
             if "authentication" not in str(e):
                 raise
             raise LLMError("no Anthropic credentials configured") from None
-        with self._usage_lock:
-            self.usage["calls"] += 1
-            self.usage["input_tokens"] += message.usage.input_tokens
-            self.usage["output_tokens"] += message.usage.output_tokens
         if message.stop_reason in ("max_tokens", "refusal"):
             raise LLMError(f"model stopped early: {message.stop_reason}")
-        return "".join(block.text for block in message.content if block.type == "text")
+        text = "".join(block.text for block in message.content if block.type == "text")
+        return text, message.usage.input_tokens, message.usage.output_tokens
+
+    def _google(self, system: str, messages: list[dict]) -> tuple[str, int, int]:
+        if self._client is None:
+            if not settings.google_api_key:
+                raise LLMError("no Google API key configured")
+            self._client = genai.Client(api_key=settings.google_api_key)
+        try:
+            response = self._client.models.generate_content(
+                model=self.model,
+                contents=[
+                    # Gemini calls the assistant turn "model"
+                    {
+                        "role": "model" if m["role"] == "assistant" else "user",
+                        "parts": [{"text": m["content"]}],
+                    }
+                    for m in messages
+                ],
+                config=genai_types.GenerateContentConfig(
+                    system_instruction=system,
+                    response_mime_type="application/json",
+                    max_output_tokens=32000,
+                ),
+            )
+        except genai_errors.APIError as e:
+            # ponytail: no retry here, so a free-tier 429 fails the call. The orchestrator
+            # retries each agent once; add backoff if rate limits bite.
+            raise LLMError(f"model call failed: {type(e).__name__} {e.code}") from None
+        reason = response.candidates[0].finish_reason if response.candidates else None
+        if reason is None or reason.name != "STOP":
+            raise LLMError(f"model stopped early: {reason.name if reason else 'no candidates'}")
+        usage = response.usage_metadata
+        tokens_out = (usage.candidates_token_count or 0) + (usage.thoughts_token_count or 0)
+        return response.text or "", usage.prompt_token_count or 0, tokens_out
 
     def complete(
         self,

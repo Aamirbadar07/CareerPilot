@@ -51,3 +51,49 @@ def test_cache_hit_skips_the_model(sessions):
     second = llm.complete("sys", {"a": 1, "b": 2}, Out)  # key order must not matter
     assert first == second
     assert len(llm.calls) == 1
+
+
+def test_google_provider_maps_roles_system_prompt_and_usage(monkeypatch):
+    from types import SimpleNamespace as NS
+
+    from app.core import llm as llm_module
+
+    monkeypatch.setattr(llm_module.settings, "llm_provider", "google")
+    seen = {}
+
+    def generate_content(model, contents, config):
+        seen.update(model=model, contents=contents, config=config)
+        bad = len(contents) == 1  # first answer is invalid, so the retry path runs too
+        return NS(
+            text='{"name": "a"}' if bad else GOOD,
+            candidates=[NS(finish_reason=NS(name="STOP"))],
+            usage_metadata=NS(
+                prompt_token_count=10, candidates_token_count=4, thoughts_token_count=1
+            ),
+        )
+
+    client = NS(models=NS(generate_content=generate_content))
+    model = llm_module.LLM(client=client)
+    assert model.complete("the system prompt", {"x": 1}, Out) == Out(name="a", n=1)
+
+    assert seen["model"] == llm_module.settings.google_model
+    assert [c["role"] for c in seen["contents"]] == ["user", "model", "user"]
+    assert seen["config"].system_instruction == "the system prompt"
+    assert seen["config"].response_mime_type == "application/json"
+    assert model.usage == {"calls": 2, "input_tokens": 20, "output_tokens": 10}
+
+
+def test_google_provider_fails_loudly_when_cut_off_or_unconfigured(monkeypatch):
+    from types import SimpleNamespace as NS
+
+    from app.core import llm as llm_module
+
+    monkeypatch.setattr(llm_module.settings, "llm_provider", "google")
+    monkeypatch.setattr(llm_module.settings, "google_api_key", "")
+    with pytest.raises(LLMError, match="no Google API key"):
+        llm_module.LLM().complete("sys", "x", Out)
+
+    cut = NS(text="", candidates=[NS(finish_reason=NS(name="MAX_TOKENS"))], usage_metadata=None)
+    client = NS(models=NS(generate_content=lambda **kwargs: cut))
+    with pytest.raises(LLMError, match="MAX_TOKENS"):
+        llm_module.LLM(client=client).complete("sys", "x", Out)

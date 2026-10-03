@@ -1,11 +1,16 @@
+from typing import Literal
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
+    llm_provider: Literal["anthropic", "google"] = "anthropic"
     anthropic_api_key: str = ""
     anthropic_model: str = "claude-sonnet-4-6"
+    google_api_key: str = ""  # a Gemini API key from Google AI Studio
+    google_model: str = "gemini-3.8-flash"
     database_url: str = ""
     rapidapi_key: str = ""  # JSearch; the source is skipped when empty
     greenhouse_boards: str = "gitlab"  # comma-separated board tokens

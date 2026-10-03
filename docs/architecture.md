@@ -13,7 +13,7 @@ Kept current per CLAUDE.md: update this file whenever a component is added.
 | DB models: `profiles`, `profile_versions`, `llm_cache` | `backend/app/db/models.py` | Phase 1 |
 | Migrations (Alembic) | `backend/app/db/migrations/` | Phase 1 |
 | Repositories and LLM response cache | `backend/app/db/repositories.py` | Phase 1 |
-| LLM client: JSON repair, one validation retry, content-hash cache | `backend/app/core/llm.py` | Phase 1 |
+| LLM client: JSON repair, one validation retry, content-hash cache; Anthropic or Google Gemini via `LLM_PROVIDER` | `backend/app/core/llm.py` | Phase 1 |
 | Resume text extraction (PDF, DOCX, TXT; in memory, 5 MB cap) | `backend/app/core/resume_text.py` | Phase 2 |
 | Resume Analyzer agent | `backend/app/agents/resume_analyzer/` | Phase 2 |
 | Profile API: upload, read, delete-my-data | `backend/app/api/profiles.py` | Phase 2 |

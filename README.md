@@ -64,7 +64,7 @@ You need [uv](https://docs.astral.sh/uv/) and Node 22.18 or newer.
 ```bash
 cd backend
 uv sync
-cp .env.example .env        # then set ANTHROPIC_API_KEY
+cp .env.example .env        # then set ANTHROPIC_API_KEY, or LLM_PROVIDER=google and GOOGLE_API_KEY
 uv run alembic upgrade head
 uv run uvicorn app.main:app --reload
 ```
@@ -81,8 +81,11 @@ coaching plan. Uploading your own resume needs the key.
 
 | Variable | Needed for | Default |
 |---|---|---|
-| `ANTHROPIC_API_KEY` | every agent | none |
+| `LLM_PROVIDER` | which model family runs the agents: `anthropic` or `google` | `anthropic` |
+| `ANTHROPIC_API_KEY` | every agent, when the provider is `anthropic` | none |
 | `ANTHROPIC_MODEL` | model choice | `claude-sonnet-4-6` |
+| `GOOGLE_API_KEY` | every agent, when the provider is `google` (a Gemini key from Google AI Studio) | none |
+| `GOOGLE_MODEL` | model choice | `gemini-3.8-flash` |
 | `DATABASE_URL` | Postgres (Supabase) | a local SQLite file |
 | `RAPIDAPI_KEY` | JSearch job source | source skipped |
 | `GREENHOUSE_BOARDS` | which company boards to read | `gitlab` |
