@@ -154,7 +154,9 @@ class Orchestrator:
             except Exception as e:  # noqa: BLE001 - any failure degrades the branch, never the run
                 log.warning("%s attempt %d failed: %s", agent, attempt, type(e).__name__)
                 if attempt == 2:
-                    self.run.emit(agent, "failed", "failed twice; continuing without it")
+                    # LLMError text never carries resume content, so it can be shown
+                    why = f" ({e})" if isinstance(e, LLMError) else ""
+                    self.run.emit(agent, "failed", f"failed twice{why}; continuing without it")
                     update["degraded"] = [*state["degraded"], agent]
                 continue
             self.run.emit(agent, "succeeded", detail)
