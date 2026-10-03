@@ -115,8 +115,8 @@
     {
       "bullet_id": "pb_3",
       "problem": "Opens with \"Worked on\", which hides what you personally built. It gives no result.",
-      "rewrite": "Built a Python script that ranks resumes against a job description using sentence-transformer embeddings.",
-      "needs_from_user": "How many resumes did you run it on, and how did its ranking compare with a manual one?"
+      "rewrite": "Contributed to a Python script that ranks resumes against a job description using sentence-transformer embeddings.",
+      "needs_from_user": "Which part did you build yourself? If you wrote the whole script, say so and it becomes \"Built\". Also: how many resumes did you run it on, and how did its ranking compare with a manual one?"
     }
   ],
   "missing_keywords": [

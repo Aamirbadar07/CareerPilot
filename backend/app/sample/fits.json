@@ -25,7 +25,7 @@
       "pgvector is a vector database, but the resume never uses the phrase the posting searches for.",
       "The evaluation script in b_3 is the posting's \"measure answer quality before every release\" and should sit higher."
     ],
-    "resume_angle": "Built and evaluated a production RAG support chatbot with LangChain and FastAPI.",
+    "resume_angle": "Built and evaluated a RAG support chatbot with LangChain and FastAPI.",
     "application_priority": 1,
     "verdict": "This is the closest match in the list: every must-have is evidenced and the internship project mirrors the product. Apply now with the RAG chatbot leading the resume.",
     "capped": false

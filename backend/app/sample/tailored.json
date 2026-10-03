@@ -1,0 +1,60 @@
+{
+  "https://example.com/sample-jobs/lumen-forge-genai-developer": {
+    "status": "tailored",
+    "attempts": 1,
+    "reason": null,
+    "resume": {
+      "title_line": "Generative AI Developer",
+      "summary": "Generative AI developer who built and evaluated a RAG support chatbot with LangChain and FastAPI. 5 months of internship experience shipping Python LLM services, from the retrieval pipeline to groundedness evaluation, plus a containerised FastAPI project deployed through CI/CD.",
+      "skills": [
+        { "category": "AI / LLM", "items": ["RAG", "LangChain", "LLM Evaluation", "Prompt Engineering", "Sentence Transformers"] },
+        { "category": "Backend", "items": ["Python", "FastAPI", "PostgreSQL", "pgvector (vector database)"] },
+        { "category": "DevOps and Cloud", "items": ["Docker", "GitHub Actions", "AWS Cloud Fundamentals"] }
+      ],
+      "experience": [
+        {
+          "exp_id": "exp_1",
+          "bullets": [
+            { "text": "Built a RAG pipeline over 1,200 internal support documents with LangChain and FastAPI, cutting average answer lookup time from 6 minutes to under 1 minute.", "from_bullet": "b_1" },
+            { "text": "Measured answer quality before release with an evaluation script that scored 150 question-answer pairs for groundedness and caught 18 hallucinated answers.", "from_bullet": "b_3" },
+            { "text": "Wrote the prompt templates used by the support assistant.", "from_bullet": "b_2" }
+          ]
+        }
+      ],
+      "projects": [
+        {
+          "proj_id": "proj_1",
+          "bullets": [
+            { "text": "Built a FastAPI service that answers questions over uploaded PDFs using embeddings stored in a vector database (PostgreSQL with pgvector).", "from_bullet": "pb_1" },
+            { "text": "Containerised the service with Docker and deployed it through a GitHub Actions CI/CD pipeline.", "from_bullet": "pb_2" }
+          ]
+        },
+        {
+          "proj_id": "proj_2",
+          "bullets": [
+            { "text": "Contributed to a Python script that ranks resumes against a job description using sentence-transformer embeddings.", "from_bullet": "pb_3" }
+          ]
+        }
+      ],
+      "omitted": [],
+      "keywords_covered": ["Python", "RAG", "LangChain", "FastAPI", "Docker", "vector database", "CI/CD"],
+      "keywords_not_covered": ["AWS (hands-on)"]
+    },
+    "validation": {
+      "verdict": "pass",
+      "must_fix_count": 0,
+      "findings": [
+        { "claim": "Built a RAG pipeline over 1,200 internal support documents with LangChain and FastAPI", "status": "REWORDED", "profile_evidence": "b_1", "fix": "" },
+        { "claim": "cutting average answer lookup time from 6 minutes to under 1 minute", "status": "SUPPORTED", "profile_evidence": "b_1", "fix": "" },
+        { "claim": "evaluation script that scored 150 question-answer pairs for groundedness and caught 18 hallucinated answers", "status": "SUPPORTED", "profile_evidence": "b_3", "fix": "" },
+        { "claim": "Measured answer quality before release", "status": "REWORDED", "profile_evidence": "b_3", "fix": "" },
+        { "claim": "Wrote the prompt templates used by the support assistant", "status": "REWORDED", "profile_evidence": "b_2", "fix": "" },
+        { "claim": "embeddings stored in a vector database (PostgreSQL with pgvector)", "status": "REWORDED", "profile_evidence": "pb_1", "fix": "" },
+        { "claim": "deployed it through a GitHub Actions CI/CD pipeline", "status": "REWORDED", "profile_evidence": "pb_2", "fix": "" },
+        { "claim": "Contributed to a Python script that ranks resumes", "status": "REWORDED", "profile_evidence": "pb_3", "fix": "" },
+        { "claim": "5 months of internship experience", "status": "SUPPORTED", "profile_evidence": "exp_1", "fix": "" },
+        { "claim": "title: Generative AI Developer", "status": "SUPPORTED", "profile_evidence": "identity.title_line", "fix": "" }
+      ]
+    }
+  }
+}

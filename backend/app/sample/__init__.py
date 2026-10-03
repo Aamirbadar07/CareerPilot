@@ -33,11 +33,11 @@ def jobs() -> list[dict]:
 
 
 def seed(db: Session) -> None:
-    """Insert the sample profile and its artifacts once."""
-    if repo.get_profile(db, SAMPLE_ID) is not None:
-        return
+    """Insert the sample profile once; refresh its artifacts on every start so a deploy with
+    edited sample files shows them."""
     candidate = profile()
-    repo.save_profile(db, candidate)  # no ttl: never expires
+    if repo.get_profile(db, SAMPLE_ID) is None:
+        repo.save_profile(db, candidate)  # no ttl: never expires
 
     def put(kind: str, data: dict, ref: str = "") -> None:
         repo.put_artifact(db, SAMPLE_ID, kind, data, candidate.version, ref)
@@ -45,10 +45,12 @@ def seed(db: Session) -> None:
     analysis = load("analysis.json")
     del analysis["master_profile"]
     put("resume_analysis", analysis)
-    fits = load("fits.json")
+    fits, tailored = load("fits.json"), load("tailored.json")
     for job in jobs():
         put("job", job, job["id"])
         put("fit_report", fits[job["url"]], job["id"])
+        if job["url"] in tailored:
+            put("tailored_resume", tailored[job["url"]], job["id"])
     discovery = load("jobs.json")
     del discovery["jobs"]
     put("job_discovery", discovery)
