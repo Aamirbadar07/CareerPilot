@@ -51,10 +51,17 @@ class LLM:
                 api_key=settings.anthropic_api_key or None, max_retries=3
             )
         # streamed so long outputs (a full profile) cannot hit the HTTP timeout
-        with self._client.messages.stream(
-            model=self.model, max_tokens=32000, system=system, messages=messages
-        ) as stream:
-            message = stream.get_final_message()
+        try:
+            with self._client.messages.stream(
+                model=self.model, max_tokens=32000, system=system, messages=messages
+            ) as stream:
+                message = stream.get_final_message()
+        except anthropic.AnthropicError as e:  # the SDK has already retried what is retryable
+            raise LLMError(f"model call failed: {type(e).__name__}") from None
+        except TypeError as e:  # the SDK raises a bare TypeError when it finds no credentials
+            if "authentication" not in str(e):
+                raise
+            raise LLMError("no Anthropic credentials configured") from None
         if message.stop_reason in ("max_tokens", "refusal"):
             raise LLMError(f"model stopped early: {message.stop_reason}")
         return "".join(block.text for block in message.content if block.type == "text")

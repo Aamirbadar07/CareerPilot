@@ -48,3 +48,24 @@ def sessions():
 def db(sessions):
     with sessions() as session:
         yield session
+
+
+@pytest.fixture
+def client(sessions):
+    """API client on the in-memory database. Tests set client.llm to a fake_llm(...)."""
+    from fastapi.testclient import TestClient
+
+    from app.api.deps import get_llm
+    from app.db.session import get_db
+    from app.main import app
+
+    def db():
+        with sessions() as session:
+            yield session
+
+    client = TestClient(app)  # not used as a context manager, so lifespan seeding is skipped
+    client.llm = None
+    app.dependency_overrides[get_db] = db
+    app.dependency_overrides[get_llm] = lambda: client.llm
+    yield client
+    app.dependency_overrides.clear()

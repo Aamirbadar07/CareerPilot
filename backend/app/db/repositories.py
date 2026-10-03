@@ -3,7 +3,7 @@ from datetime import UTC, datetime, timedelta
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
-from app.db.models import LLMCache, Profile, ProfileVersion
+from app.db.models import Artifact, LLMCache, Profile, ProfileVersion
 from app.schemas.profile import MasterProfile
 
 
@@ -33,6 +33,7 @@ def get_profile(db: Session, profile_id: str, version: int | None = None) -> Mas
 def delete_profile(db: Session, profile_id: str) -> None:
     """Delete a profile and everything derived from it."""
     db.execute(delete(LLMCache).where(LLMCache.profile_id == profile_id))
+    db.execute(delete(Artifact).where(Artifact.profile_id == profile_id))
     db.execute(delete(ProfileVersion).where(ProfileVersion.profile_id == profile_id))
     db.execute(delete(Profile).where(Profile.id == profile_id))
     db.commit()
@@ -44,6 +45,46 @@ def purge_expired(db: Session, now: datetime | None = None) -> int:
     for profile_id in ids:
         delete_profile(db, profile_id)
     return len(ids)
+
+
+def put_artifact(
+    db: Session, profile_id: str, kind: str, data: dict, profile_version: int, ref: str = ""
+) -> None:
+    """Insert or replace the artifact for (profile, kind, ref)."""
+    db.execute(
+        delete(Artifact).where(
+            Artifact.profile_id == profile_id, Artifact.kind == kind, Artifact.ref == ref
+        )
+    )
+    db.add(
+        Artifact(
+            profile_id=profile_id, kind=kind, ref=ref, profile_version=profile_version, data=data
+        )
+    )
+    db.commit()
+
+
+def get_artifact(db: Session, profile_id: str, kind: str, ref: str = "") -> Artifact | None:
+    return db.scalars(
+        select(Artifact).where(
+            Artifact.profile_id == profile_id, Artifact.kind == kind, Artifact.ref == ref
+        )
+    ).first()
+
+
+def list_artifacts(db: Session, profile_id: str, kind: str) -> list[Artifact]:
+    return list(
+        db.scalars(
+            select(Artifact)
+            .where(Artifact.profile_id == profile_id, Artifact.kind == kind)
+            .order_by(Artifact.id)
+        )
+    )
+
+
+def delete_artifacts(db: Session, profile_id: str, *kinds: str) -> None:
+    db.execute(delete(Artifact).where(Artifact.profile_id == profile_id, Artifact.kind.in_(kinds)))
+    db.commit()
 
 
 class DbCache:

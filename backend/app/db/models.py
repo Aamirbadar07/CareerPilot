@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 
-from sqlalchemy import JSON, DateTime, ForeignKey, String, Text
+from sqlalchemy import JSON, DateTime, ForeignKey, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -45,4 +45,21 @@ class LLMCache(Base):
     key: Mapped[str] = mapped_column(String(64), primary_key=True)
     profile_id: Mapped[str | None] = mapped_column(String(36), index=True)
     value: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
+
+
+class Artifact(Base):
+    """Anything an agent derived from a profile: analysis, jobs, fit reports, tailored
+    resumes, LinkedIn copy, coaching plans. One row per (profile, kind, ref); ref is the job
+    id for per-job kinds and "" otherwise."""
+
+    __tablename__ = "artifacts"
+    __table_args__ = (UniqueConstraint("profile_id", "kind", "ref"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    profile_id: Mapped[str] = mapped_column(String(36), index=True)
+    kind: Mapped[str] = mapped_column(String(32))
+    ref: Mapped[str] = mapped_column(String(64), default="")
+    profile_version: Mapped[int]
+    data: Mapped[dict] = mapped_column(Json)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
