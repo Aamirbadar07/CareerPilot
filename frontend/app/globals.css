@@ -1,0 +1,145 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Design tokens. Every colour in the app comes from here; components never hardcode one. */
+:root {
+  --bg: #fafafc;
+  --surface: #ffffff;
+  --surface-2: #f1f2f6;
+  --border: rgba(0, 0, 0, 0.08);
+  --border-strong: rgba(0, 0, 0, 0.16);
+  --fg: #14161f;
+  --muted: #5b6172;
+
+  --accent-from: #6366f1;
+  --accent-to: #22d3ee;
+  --accent-gradient: linear-gradient(100deg, var(--accent-from), var(--accent-to));
+  --on-accent: #0a0b10;
+  --accent-fg: #4338ca; /* accent as text: AA on the light background */
+  --glow: rgba(99, 102, 241, 0.22);
+
+  /* Band colours. The first of each pair is for rings, fills and dots; the -fg one is the
+     same hue darkened until it passes AA as text on this theme's surfaces. */
+  --strong: #10b981;
+  --strong-fg: #047857;
+  --competitive: #f59e0b;
+  --competitive-fg: #b45309;
+  --stretch: #f43f5e;
+  --stretch-fg: #be123c;
+  --poor: #8a90a0;
+  --poor-fg: #5b6172;
+
+  --add-bg: rgba(16, 185, 129, 0.16);
+  --remove-bg: rgba(244, 63, 94, 0.14);
+
+  --radius: 14px;
+  --blur: 12px;
+}
+
+.dark {
+  --bg: #0a0b10;
+  --surface: #12141c;
+  --surface-2: #1a1d28;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.18);
+  --fg: #e8eaf0;
+  --muted: #9aa1b2;
+
+  --accent-fg: #a5b4fc;
+  --glow: rgba(34, 211, 238, 0.16);
+
+  --strong-fg: #34d399;
+  --competitive-fg: #fbbf24;
+  --stretch-fg: #fb7185;
+  --poor-fg: #9aa1b2;
+
+  --add-bg: rgba(16, 185, 129, 0.2);
+  --remove-bg: rgba(244, 63, 94, 0.2);
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
+  }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-inter), system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-sora), system-ui, sans-serif;
+    letter-spacing: -0.015em;
+  }
+  /* One visible focus ring everywhere, keyboard only. */
+  :focus-visible {
+    outline: 2px solid var(--accent-to);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+  ::selection {
+    background: var(--glow);
+  }
+}
+
+@layer components {
+  /* The card: 1px border, blurred surface, soft outer glow on hover. */
+  .card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: color-mix(in srgb, var(--surface) 86%, transparent);
+    backdrop-filter: blur(var(--blur));
+  }
+  .card-hover {
+    transition:
+      transform 220ms ease-out,
+      box-shadow 220ms ease-out,
+      border-color 220ms ease-out;
+  }
+  .card-hover:hover {
+    transform: translateY(-2px);
+    border-color: var(--border-strong);
+    box-shadow: 0 0 0 1px var(--border), 0 12px 40px -12px var(--glow);
+  }
+  .num {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  .skeleton {
+    border-radius: 8px;
+    background: var(--surface-2);
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+@keyframes scan {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(400%);
+  }
+}
+
+/* Motion is replaced by instant state changes for people who ask for that. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
