@@ -1,0 +1,170 @@
+{
+  "https://example.com/sample-jobs/lumen-forge-genai-developer": {
+    "score": 89,
+    "band": "Strong",
+    "dimensions": [
+      { "name": "must-have skill coverage", "score": 33, "max": 35, "why": "Python, RAG, LangChain and FastAPI are all evidenced, three of them in one production bullet." },
+      { "name": "nice-to-have skill coverage", "score": 8, "max": 10, "why": "Docker and pgvector are shown in DocQuery; AWS is a certificate without hands-on work." },
+      { "name": "experience depth vs requirement", "score": 15, "max": 20, "why": "A five-month internship against a 0-1 year requirement that says internships count." },
+      { "name": "domain and project relevance", "score": 18, "max": 20, "why": "The internship project was a RAG chatbot for support documents, which is this company's product area." },
+      { "name": "seniority alignment", "score": 10, "max": 10, "why": "An entry-level role for an entry-level candidate." },
+      { "name": "location / remote / type fit", "score": 5, "max": 5, "why": "Remote within India, full-time, as preferred." }
+    ],
+    "matched": [
+      { "skill": "Python", "evidence": "b_1" },
+      { "skill": "RAG", "evidence": "b_1" },
+      { "skill": "LangChain", "evidence": "b_1" },
+      { "skill": "FastAPI", "evidence": "pb_1" },
+      { "skill": "Docker", "evidence": "pb_2" },
+      { "skill": "vector database", "evidence": "pb_1" }
+    ],
+    "missing": [
+      { "skill": "AWS (hands-on)", "type": "learnable", "how_to_close": "Deploy DocQuery on AWS and name the services used." }
+    ],
+    "closable_now": [
+      "pgvector is a vector database, but the resume never uses the phrase the posting searches for.",
+      "The evaluation script in b_3 is the posting's \"measure answer quality before every release\" and should sit higher."
+    ],
+    "resume_angle": "Built and evaluated a production RAG support chatbot with LangChain and FastAPI.",
+    "application_priority": 1,
+    "verdict": "This is the closest match in the list: every must-have is evidenced and the internship project mirrors the product. Apply now with the RAG chatbot leading the resume.",
+    "capped": false
+  },
+  "https://example.com/sample-jobs/orbitline-junior-ai-engineer": {
+    "score": 71,
+    "band": "Competitive",
+    "dimensions": [
+      { "name": "must-have skill coverage", "score": 30, "max": 35, "why": "Python, LLM work and evaluation are evidenced; prompt engineering rests on one duty-style bullet." },
+      { "name": "nice-to-have skill coverage", "score": 0, "max": 10, "why": "No agent or tool-calling work and no TypeScript in the profile." },
+      { "name": "experience depth vs requirement", "score": 12, "max": 20, "why": "Five months against a one-year requirement, with internships allowed." },
+      { "name": "domain and project relevance", "score": 15, "max": 20, "why": "The groundedness evaluation script is the core of this role; the domain, logistics, is new." },
+      { "name": "seniority alignment", "score": 9, "max": 10, "why": "A junior title, slightly above pure entry level." },
+      { "name": "location / remote / type fit", "score": 5, "max": 5, "why": "Remote with IST overlap, full-time." }
+    ],
+    "matched": [
+      { "skill": "Python", "evidence": "b_3" },
+      { "skill": "LLM APIs", "evidence": "b_1" },
+      { "skill": "prompt engineering", "evidence": "b_2" },
+      { "skill": "LLM evaluation", "evidence": "b_3" }
+    ],
+    "missing": [
+      { "skill": "agents / tool calling", "type": "learnable", "how_to_close": "Add one tool-calling feature to DocQuery and describe it in a bullet." },
+      { "skill": "TypeScript", "type": "learnable", "how_to_close": "Not required. Skip unless other target jobs ask for it." }
+    ],
+    "closable_now": [
+      "The evaluation bullet b_3 is third on the resume and should lead for this job.",
+      "The prompt template bullet b_2 states a duty; rewrite it as what was built."
+    ],
+    "resume_angle": "Wrote the evaluation harness that caught 18 hallucinated answers before a RAG chatbot shipped.",
+    "application_priority": 2,
+    "verdict": "Realistic with a tailored resume: the evaluation work is exactly what the role owns. The experience length is short of the stated year, so lead with the measured results.",
+    "capped": false
+  },
+  "https://example.com/sample-jobs/paperkite-associate-llm-developer": {
+    "score": 52,
+    "band": "Stretch",
+    "dimensions": [
+      { "name": "must-have skill coverage", "score": 15, "max": 35, "why": "Python and LangChain are evidenced. Agents with tool calling and hands-on AWS are both absent." },
+      { "name": "nice-to-have skill coverage", "score": 0, "max": 10, "why": "No Kubernetes and no TypeScript." },
+      { "name": "experience depth vs requirement", "score": 13, "max": 20, "why": "Five months sits inside the 0-2 year range, at the low end." },
+      { "name": "domain and project relevance", "score": 10, "max": 20, "why": "DocQuery handles documents, but as retrieval, not as agentic workflows." },
+      { "name": "seniority alignment", "score": 9, "max": 10, "why": "An associate role suits an entry-level candidate." },
+      { "name": "location / remote / type fit", "score": 5, "max": 5, "why": "Remote within India, full-time." }
+    ],
+    "matched": [
+      { "skill": "Python", "evidence": "b_1" },
+      { "skill": "LangChain", "evidence": "b_1" }
+    ],
+    "missing": [
+      { "skill": "agents / tool calling", "type": "blocker", "how_to_close": "Build one LangChain agent that calls tools and ship it as part of DocQuery." },
+      { "skill": "AWS", "type": "blocker", "how_to_close": "Deploy that agent on Lambda with Bedrock; the certificate alone does not show hands-on work." }
+    ],
+    "closable_now": [],
+    "resume_angle": "LangChain developer with a shipped document question-answering service.",
+    "application_priority": 4,
+    "verdict": "Two of four must-haves are missing and no rewording of the resume fixes that. Apply only after an agent project on AWS exists, or with a referral.",
+    "capped": false
+  },
+  "https://example.com/sample-jobs/tallyroot-python-backend-developer": {
+    "score": 60,
+    "band": "Competitive",
+    "dimensions": [
+      { "name": "must-have skill coverage", "score": 28, "max": 35, "why": "Python, FastAPI, PostgreSQL and Docker are evidenced. Automated testing with pytest is not." },
+      { "name": "nice-to-have skill coverage", "score": 4, "max": 10, "why": "The GitHub Actions pipeline is CI/CD; there is no Redis." },
+      { "name": "experience depth vs requirement", "score": 14, "max": 20, "why": "Five months against 0-1 years." },
+      { "name": "domain and project relevance", "score": 12, "max": 20, "why": "DocQuery is a real FastAPI and PostgreSQL service, but the profile reads as AI-first." },
+      { "name": "seniority alignment", "score": 10, "max": 10, "why": "A level I role." },
+      { "name": "location / remote / type fit", "score": 5, "max": 5, "why": "Remote, full-time." }
+    ],
+    "matched": [
+      { "skill": "Python", "evidence": "pb_1" },
+      { "skill": "FastAPI", "evidence": "pb_1" },
+      { "skill": "PostgreSQL", "evidence": "pb_1" },
+      { "skill": "Docker", "evidence": "pb_2" },
+      { "skill": "CI/CD", "evidence": "pb_2" }
+    ],
+    "missing": [
+      { "skill": "pytest", "type": "learnable", "how_to_close": "Add a pytest suite to DocQuery, run it in the GitHub Actions pipeline, and say so in a bullet." },
+      { "skill": "Redis", "type": "learnable", "how_to_close": "Not required." }
+    ],
+    "closable_now": [
+      "The GitHub Actions pipeline is CI/CD, but the resume never uses that term."
+    ],
+    "resume_angle": "Built, containerised and deployed a FastAPI service backed by PostgreSQL.",
+    "application_priority": 3,
+    "verdict": "The dimensions add up to 73, but pytest is a stated must-have with no evidence, so the score is held at 60. One afternoon adding tests to DocQuery removes the cap.",
+    "capped": true
+  },
+  "https://example.com/sample-jobs/quillstack-ml-engineer-genai": {
+    "score": 47,
+    "band": "Stretch",
+    "dimensions": [
+      { "name": "must-have skill coverage", "score": 9, "max": 35, "why": "Python only. PyTorch and fine-tuning are absent; sentence-transformers is adjacent to, not the same as, Transformers training work." },
+      { "name": "nice-to-have skill coverage", "score": 8, "max": 10, "why": "RAG and Docker are both evidenced." },
+      { "name": "experience depth vs requirement", "score": 7, "max": 20, "why": "Open to graduates, but nothing in the profile is model training." },
+      { "name": "domain and project relevance", "score": 8, "max": 20, "why": "The work shown is application-layer LLM engineering, not training or fine-tuning." },
+      { "name": "seniority alignment", "score": 10, "max": 10, "why": "A graduate role." },
+      { "name": "location / remote / type fit", "score": 5, "max": 5, "why": "Remote, full-time." }
+    ],
+    "matched": [
+      { "skill": "Python", "evidence": "pb_3" },
+      { "skill": "RAG", "evidence": "b_1" },
+      { "skill": "Docker", "evidence": "pb_2" }
+    ],
+    "missing": [
+      { "skill": "PyTorch", "type": "blocker", "how_to_close": "Fine-tune a small open-weight model with LoRA and publish the notebook and results." },
+      { "skill": "fine-tuning", "type": "blocker", "how_to_close": "The same project covers it." },
+      { "skill": "Hugging Face Transformers", "type": "learnable", "how_to_close": "The same project covers it." }
+    ],
+    "closable_now": [],
+    "resume_angle": "Python engineer with embedding and retrieval experience.",
+    "application_priority": 4,
+    "verdict": "This is a model-training role and the profile is application engineering. Skip it unless you want to move toward training, in which case build one fine-tuning project first.",
+    "capped": false
+  },
+  "https://example.com/sample-jobs/harborlight-ai-solutions-engineer": {
+    "score": 33,
+    "band": "Poor",
+    "dimensions": [
+      { "name": "must-have skill coverage", "score": 14, "max": 35, "why": "Python and RAG are evidenced. Two years of hands-on AWS and customer-facing work are both absent." },
+      { "name": "nice-to-have skill coverage", "score": 0, "max": 10, "why": "No Terraform." },
+      { "name": "experience depth vs requirement", "score": 4, "max": 20, "why": "Five months against a two-year requirement." },
+      { "name": "domain and project relevance", "score": 8, "max": 20, "why": "RAG is relevant; consulting delivery to enterprise buyers is not shown." },
+      { "name": "seniority alignment", "score": 2, "max": 10, "why": "A mid-level, customer-facing role." },
+      { "name": "location / remote / type fit", "score": 5, "max": 5, "why": "Remote, full-time." }
+    ],
+    "matched": [
+      { "skill": "Python", "evidence": "b_1" },
+      { "skill": "RAG", "evidence": "b_1" }
+    ],
+    "missing": [
+      { "skill": "AWS", "type": "blocker", "how_to_close": "Two years of hands-on work cannot be closed quickly." },
+      { "skill": "customer-facing experience", "type": "blocker", "how_to_close": "Not closable with a project." }
+    ],
+    "closable_now": [],
+    "resume_angle": "RAG developer with a cloud fundamentals certificate.",
+    "application_priority": 5,
+    "verdict": "Do not spend time here. The role needs two years of AWS and client work that the profile does not have.",
+    "capped": false
+  }
+}

@@ -45,8 +45,10 @@ def seed(db: Session) -> None:
     analysis = load("analysis.json")
     del analysis["master_profile"]
     put("resume_analysis", analysis)
+    fits = load("fits.json")
     for job in jobs():
         put("job", job, job["id"])
+        put("fit_report", fits[job["url"]], job["id"])
     discovery = load("jobs.json")
     del discovery["jobs"]
     put("job_discovery", discovery)
