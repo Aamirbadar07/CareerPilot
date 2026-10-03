@@ -1,6 +1,7 @@
 import hashlib
 import json
 import re
+from collections.abc import Callable
 from typing import Protocol, TypeVar
 
 import anthropic
@@ -32,10 +33,12 @@ def repair_json(text: str) -> str:
     return re.sub(r",\s*([}\]])", r"\1", text)
 
 
-def _problems(e: ValidationError | json.JSONDecodeError) -> str:
+def _problems(e: Exception) -> str:
     if isinstance(e, ValidationError):
         return json.dumps(e.errors(include_input=False, include_url=False), default=str)
-    return f"invalid JSON: {e.msg} at line {e.lineno} column {e.colno}"
+    if isinstance(e, json.JSONDecodeError):
+        return f"invalid JSON: {e.msg} at line {e.lineno} column {e.colno}"
+    return str(e)  # a ValueError raised by an agent's check
 
 
 class LLM:
@@ -67,12 +70,22 @@ class LLM:
         return "".join(block.text for block in message.content if block.type == "text")
 
     def complete(
-        self, system: str, inputs: dict | str, schema: type[T], profile_id: str | None = None
+        self,
+        system: str,
+        inputs: dict | str,
+        schema: type[T],
+        profile_id: str | None = None,
+        check: Callable[[T], None] | None = None,
     ) -> T:
         """One agent call: JSON in, validated `schema` out. A parse or validation failure is
-        retried once with the error, then raised (CLAUDE.md rule 3)."""
+        retried once with the error, then raised (CLAUDE.md rule 3).
+
+        `check` is for rules that need more than the output itself, such as "every evidence
+        id exists in this profile". It raises ValueError, which is treated like a schema
+        failure. Its message goes to the model and to logs, so it must name positions, not
+        content."""
         user = inputs if isinstance(inputs, str) else json.dumps(inputs, sort_keys=True)
-        key = hashlib.sha256(f"{self.model}\x00{system}\x00{user}".encode()).hexdigest()
+        key = hashlib.sha256(f"{self.model}\0{system}\0{user}".encode()).hexdigest()
         if self.cache and (hit := self.cache.get(key)) is not None:
             return schema.model_validate_json(hit)
 
@@ -81,7 +94,9 @@ class LLM:
             raw = self._raw(system, messages)
             try:
                 result = schema.model_validate(json.loads(repair_json(raw)))
-            except (ValidationError, json.JSONDecodeError) as e:
+                if check:
+                    check(result)
+            except (ValidationError, json.JSONDecodeError, ValueError) as e:
                 problems = _problems(e)
                 if attempt == 2:
                     raise LLMError(f"{schema.__name__} invalid after retry: {problems}") from None
@@ -89,8 +104,8 @@ class LLM:
                     {"role": "assistant", "content": raw},
                     {
                         "role": "user",
-                        "content": "Your output failed validation:\n"
-                        f"{problems}\nReturn the corrected JSON only.",
+                        "content": f"Your output failed validation: {problems} "
+                        "Return the corrected JSON only.",
                     },
                 ]
                 continue
