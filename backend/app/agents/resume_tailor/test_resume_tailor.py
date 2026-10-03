@@ -7,12 +7,12 @@ from app import sample
 from app.agents.fit_scorer.schema import FitReport
 from app.agents.job_discovery.schema import Job
 from app.agents.resume_tailor.agent import (
-    experience_months,
     fabrications,
     tailor_resume,
     untailored,
 )
 from app.agents.resume_tailor.schema import TailoredResume
+from app.core.guard import experience_months
 from conftest import fake_llm
 
 URL = "https://example.com/sample-jobs/lumen-forge-genai-developer"

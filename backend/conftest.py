@@ -6,7 +6,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.core.llm import LLM
+from app.core.llm import LLM, LLMError
 from app.db.models import Base
 from app.schemas.profile import MasterProfile
 
@@ -23,6 +23,24 @@ def fake_llm(*responses: str) -> LLM:
     def raw(system, messages):
         llm.calls.append((system, [dict(m) for m in messages]))
         return queue.pop(0)
+
+    llm._raw = raw
+    return llm
+
+
+def routed_llm(routes: dict) -> LLM:
+    """An LLM that answers by system prompt instead of by call order, for code that calls
+    agents from several threads. A route is a JSON string or a function of the parsed input.
+    A prompt with no route fails the way an unreachable model does."""
+    llm = LLM()
+    llm.calls = []
+
+    def raw(system, messages):
+        llm.calls.append((system, [dict(m) for m in messages]))
+        if system not in routes:
+            raise LLMError("no route for this prompt")
+        route = routes[system]
+        return route(json.loads(messages[0]["content"])) if callable(route) else route
 
     llm._raw = raw
     return llm
@@ -71,3 +89,25 @@ def client(sessions):
     app.dependency_overrides[get_llm] = lambda: client.llm
     yield client
     app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def mine(db) -> str:
+    """A profile the tests may change: the sample data under an id that is not read-only."""
+    from datetime import timedelta
+
+    from app import sample
+
+    sample.seed(db, "mine", ttl=timedelta(hours=24))
+    return "mine"
+
+
+@pytest.fixture(autouse=True)
+def no_network(monkeypatch):
+    """CLAUDE.md rule 8: a test that reaches a job source fails instead of going online."""
+    from app.agents.job_discovery import sources
+
+    def blocked(url, *args, **kwargs):
+        raise AssertionError(f"test tried to fetch {url}")
+
+    monkeypatch.setattr(sources, "get_json", blocked)

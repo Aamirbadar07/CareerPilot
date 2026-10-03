@@ -2,10 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
-from app.agents.fit_scorer.agent import score_jobs
-from app.agents.job_discovery.agent import discover_jobs, job_from_text
-from app.agents.job_discovery.schema import Job, JobDiscoveryResult
-from app.api.deps import get_llm, get_profile
+from app import services
+from app.agents.job_discovery.agent import job_from_text
+from app.api.deps import get_llm, get_own_profile, get_profile
 from app.core.llm import LLM
 from app.core.rate_limit import rate_limit
 from app.db import repositories as repo
@@ -15,23 +14,13 @@ from app.schemas.profile import MasterProfile
 router = APIRouter(prefix="/api/profiles/{profile_id}/jobs")
 
 
-def store_discovery(db: Session, profile: MasterProfile, result: JobDiscoveryResult) -> None:
-    for job in result.jobs:
-        repo.put_artifact(db, profile.profile_id, "job", job.model_dump(), profile.version, job.id)
-    if result.queries:
-        meta = result.model_dump(include={"queries", "dropped"})
-        repo.put_artifact(db, profile.profile_id, "job_discovery", meta, profile.version)
-
-
 @router.post("/discover", dependencies=[Depends(rate_limit(10, 3600))])
 def discover(
-    profile: MasterProfile = Depends(get_profile),
+    profile: MasterProfile = Depends(get_own_profile),
     db: Session = Depends(get_db),
     llm: LLM = Depends(get_llm),
 ):
-    result = discover_jobs(llm, profile)
-    store_discovery(db, profile, result)
-    return result
+    return services.discover(db, llm, profile)
 
 
 class PastedJob(BaseModel):
@@ -42,7 +31,7 @@ class PastedJob(BaseModel):
 @router.post("/paste", dependencies=[Depends(rate_limit(30, 3600))])
 def paste(
     body: PastedJob,
-    profile: MasterProfile = Depends(get_profile),
+    profile: MasterProfile = Depends(get_own_profile),
     db: Session = Depends(get_db),
     llm: LLM = Depends(get_llm),
 ):
@@ -51,22 +40,8 @@ def paste(
     if not result.jobs:
         reason = result.dropped[0].reason if result.dropped else "no job found in the text"
         raise HTTPException(422, f"Not added: {reason}")
-    store_discovery(db, profile, result)
+    services.store_discovery(db, profile, result)
     return result.jobs[0]
-
-
-def current_fits(db: Session, profile: MasterProfile) -> dict[str, dict]:
-    """Fit reports computed against the current profile version, by job id. A report from an
-    older version is stale: the profile changed, so the score may have too."""
-    return {
-        a.ref: a.data
-        for a in repo.list_artifacts(db, profile.profile_id, "fit_report")
-        if a.profile_version == profile.version
-    }
-
-
-def stored_jobs(db: Session, profile: MasterProfile) -> list[Job]:
-    return [Job(**a.data) for a in repo.list_artifacts(db, profile.profile_id, "job")]
 
 
 class FitRequest(BaseModel):
@@ -81,29 +56,27 @@ def fit(
     llm: LLM = Depends(get_llm),
 ):
     """Score jobs against the profile. Cached per (profile version, job)."""
-    done = current_fits(db, profile)
-    todo = [
-        job
-        for job in stored_jobs(db, profile)
-        if job.id not in done and (body.job_ids is None or job.id in body.job_ids)
-    ]
-    failed = []
-    for job_id, report in score_jobs(llm, profile, todo).items():
-        if report is None:
-            failed.append(job_id)
-            continue
-        done[job_id] = report.model_dump()
-        repo.put_artifact(
-            db, profile.profile_id, "fit_report", done[job_id], profile.version, job_id
-        )
-    return {"fits": done, "failed": failed}
+    fits, failed = services.score_pending(db, llm, profile, body.job_ids)
+    return {"fits": fits, "failed": failed}
 
 
 @router.get("")
 def list_jobs(profile: MasterProfile = Depends(get_profile), db: Session = Depends(get_db)):
     meta = repo.get_artifact(db, profile.profile_id, "job_discovery")
-    fits = current_fits(db, profile)
+    fits = services.current_fits(db, profile)
+    tailored = {a.ref for a in repo.list_artifacts(db, profile.profile_id, "tailored_resume")}
     return {
-        "jobs": [job.model_dump() | {"fit": fits.get(job.id)} for job in stored_jobs(db, profile)],
+        "jobs": [
+            job.model_dump() | {"fit": fits.get(job.id), "tailored": job.id in tailored}
+            for job in services.stored_jobs(db, profile)
+        ],
         "discovery": meta.data if meta else None,
     }
+
+
+@router.get("/{job_id}")
+def read_job(
+    job_id: str, profile: MasterProfile = Depends(get_profile), db: Session = Depends(get_db)
+):
+    job = services.get_job(db, profile, job_id)
+    return job.model_dump() | {"fit": services.current_fits(db, profile).get(job_id)}
