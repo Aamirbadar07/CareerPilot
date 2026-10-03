@@ -1,0 +1,11 @@
+Amazon Web Services Training and Certification
+
+AWS Certified AI Practitioner
+
+This is to certify that Asha Verma has successfully completed the AWS Certification
+requirements and is hereby recognised as an AWS Certified AI Practitioner.
+
+Issue date: August 12, 2026
+Expiration date: August 12, 2029
+Validation number: SAMPLE1234XYZ
+Validate at: https://aws.amazon.com/verification
