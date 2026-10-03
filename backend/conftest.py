@@ -31,7 +31,9 @@ def fake_llm(*responses: str) -> LLM:
 @pytest.fixture
 def example_profile() -> MasterProfile:
     data = json.loads(EXAMPLE.read_text(encoding="utf-8"))
-    data["certifications"][0]["source"] = "upload"  # the file writes the enum as "upload|link|manual"
+    data["certifications"][0]["source"] = (
+        "upload"  # the file writes the enum as "upload|link|manual"
+    )
     return MasterProfile.model_validate(data)
 
 

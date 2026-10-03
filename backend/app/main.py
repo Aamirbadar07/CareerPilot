@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
 from app import sample
-from app.api import health, profiles
+from app.api import health, jobs, profiles
 from app.core.llm import LLMError
 from app.core.logging import setup_logging
 from app.db.session import SessionLocal
@@ -31,3 +31,4 @@ def llm_failed(request, exc: LLMError):
 
 app.include_router(health.router)
 app.include_router(profiles.router)
+app.include_router(jobs.router)
