@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{{ identity.full_name }} - Resume</title>
+<style>
+  /* Layout lives here, never in the model (docs/decisions/0003). US Letter, one page. */
+  @page { size: Letter; margin: 0.5in 0.6in; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: Calibri, Carlito, "Segoe UI", Arial, sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.28;
+    color: #1a1a1a;
+  }
+  h1 { margin: 0; font-size: 22pt; line-height: 1.1; color: #1f3a5f; letter-spacing: 0.3pt; }
+  .title-line { margin: 1pt 0 3pt; font-size: 12pt; font-weight: bold; color: #1f3a5f; }
+  .contact { margin: 0 0 4pt; font-size: 9.5pt; color: #333; }
+  h2 {
+    margin: 8pt 0 4pt;
+    padding-bottom: 1.5pt;
+    border-bottom: 1pt solid #1f3a5f;
+    font-size: 10.5pt;
+    color: #1f3a5f;
+    text-transform: uppercase;
+    letter-spacing: 0.8pt;
+  }
+  p { margin: 0; }
+  .row { display: flex; justify-content: space-between; align-items: baseline; gap: 12pt; }
+  .row .left { font-weight: bold; }
+  .row .right { flex-shrink: 0; text-align: right; font-size: 9.5pt; color: #333; }
+  .sub { font-style: italic; color: #333; }
+  .entry { margin-bottom: 5pt; break-inside: avoid; }
+  ul { margin: 2pt 0 0; padding-left: 13pt; }
+  li { margin-bottom: 1.2pt; }
+  .skills p { margin-bottom: 1.2pt; }
+</style>
+</head>
+<body>
+  <h1>{{ identity.full_name }}</h1>
+  <p class="title-line">{{ resume.title_line }}</p>
+  <p class="contact">{{ contact | join(" | ") }}</p>
+
+  {% if resume.summary %}
+  <h2>Summary</h2>
+  <p>{{ resume.summary }}</p>
+  {% endif %}
+
+  {% if resume.skills %}
+  <h2>Skills</h2>
+  <div class="skills">
+    {% for group in resume.skills %}
+    <p><strong>{{ group.category }}:</strong> {{ group["items"] | join(", ") }}</p>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if experience %}
+  <h2>Experience</h2>
+  {% for exp in experience %}
+  <div class="entry">
+    <div class="row"><span class="left">{{ exp.role }}</span><span class="right">{{ exp.dates }}</span></div>
+    <div class="row"><span class="sub">{{ exp.company }}{% if exp.place %}, {{ exp.place }}{% endif %}</span><span class="right">{{ exp.tech | join(", ") }}</span></div>
+    <ul>{% for bullet in exp.bullets %}<li>{{ bullet }}</li>{% endfor %}</ul>
+  </div>
+  {% endfor %}
+  {% endif %}
+
+  {% if projects %}
+  <h2>Projects</h2>
+  {% for proj in projects %}
+  <div class="entry">
+    <div class="row"><span class="left">{{ proj.name }}</span><span class="right">{{ proj.dates }}</span></div>
+    <div class="row"><span class="sub">{{ proj.one_liner }}</span><span class="right">{{ proj.tech | join(", ") }}</span></div>
+    <ul>{% for bullet in proj.bullets %}<li>{{ bullet }}</li>{% endfor %}</ul>
+  </div>
+  {% endfor %}
+  {% endif %}
+
+  {% if education %}
+  <h2>Education</h2>
+  {% for edu in education %}
+  <div class="entry">
+    <div class="row"><span class="left">{{ edu.title }}</span><span class="right">{{ edu.dates }}</span></div>
+    <div class="row"><span class="sub">{{ edu.institution }}</span><span class="right">{{ edu.score }}</span></div>
+  </div>
+  {% endfor %}
+  {% endif %}
+
+  {% if certifications %}
+  <h2>Certifications</h2>
+  {% for cert in certifications %}
+  <div class="row"><span>{{ cert.name }}{% if cert.issuer %}, {{ cert.issuer }}{% endif %}</span><span class="right">{{ cert.dates }}</span></div>
+  {% endfor %}
+  {% endif %}
+</body>
+</html>
