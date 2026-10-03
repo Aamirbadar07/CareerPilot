@@ -46,3 +46,21 @@ def test_paste_adds_a_job_or_explains_why_not(client, db):
     assert r.status_code == 422 and "recruiter spam" in r.json()["detail"]
 
     assert client.post("/api/profiles/sample/jobs/paste", json={"text": "short"}).status_code == 422
+
+
+def test_fit_is_cached_per_profile_version(client, db):
+    sample.seed(db)
+    listed = client.get("/api/profiles/sample/jobs").json()["jobs"]
+    assert listed[0]["fit"]["band"] == "Strong"  # seeded
+
+    client.llm = fake_llm()  # every job already has a current report: no model call allowed
+    r = client.post("/api/profiles/sample/jobs/fit", json={})
+    assert r.status_code == 200 and len(r.json()["fits"]) == 6 and r.json()["failed"] == []
+
+    # a new profile version makes every report stale
+    from app.db import repositories as repo
+
+    profile = sample.profile()
+    profile.version = 2
+    repo.save_profile(db, profile)
+    assert client.get("/api/profiles/sample/jobs").json()["jobs"][0]["fit"] is None
