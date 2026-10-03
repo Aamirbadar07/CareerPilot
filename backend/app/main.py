@@ -2,10 +2,12 @@ import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app import sample
-from app.api import health, jobs, profiles
+from app.api import health, jobs, profiles, tailor
+from app.core.config import settings
 from app.core.llm import LLMError
 from app.core.logging import setup_logging
 from app.db.session import SessionLocal
@@ -20,6 +22,12 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="CareerPilot", lifespan=lifespan)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[settings.frontend_origin],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.exception_handler(LLMError)
@@ -32,3 +40,4 @@ def llm_failed(request, exc: LLMError):
 app.include_router(health.router)
 app.include_router(profiles.router)
 app.include_router(jobs.router)
+app.include_router(tailor.router)
