@@ -1,5 +1,10 @@
 # CareerPilot
 
+[![Live Demo](https://img.shields.io/badge/Live_Demo-career--pilot--lac.vercel.app-brightgreen?style=for-the-badge&logo=vercel)](https://career-pilot-lac.vercel.app)
+[![API Status](https://img.shields.io/badge/Backend_API-Cloud_Run_Live-blue?style=for-the-badge&logo=googlecloud)](https://careerpilot-backend-473372801300.us-central1.run.app/health)
+
+> 🚀 **Live Production Application:** [https://career-pilot-lac.vercel.app](https://career-pilot-lac.vercel.app)
+
 A multi-agent career platform. You upload a resume. Seven agents turn it into a structured
 profile, find matching jobs through licensed feeds, score each fit, tailor a one-page resume
 to the job you pick, write LinkedIn text, absorb new certifications and plan what to do next.
