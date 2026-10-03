@@ -1,0 +1,9 @@
+# Local Postgres for development. Production uses Supabase via DATABASE_URL.
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_PASSWORD: careerpilot
+      POSTGRES_DB: careerpilot
+    ports:
+      - "5433:5432"
