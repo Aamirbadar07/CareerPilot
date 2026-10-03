@@ -1,0 +1,88 @@
+{
+  "pattern_gaps": [
+    { "skill": "AWS (hands-on)", "blocks_n_jobs": 3, "pct_of_targets": 50, "acquisition_difficulty": "medium" },
+    { "skill": "agents / tool calling", "blocks_n_jobs": 2, "pct_of_targets": 33, "acquisition_difficulty": "low" },
+    { "skill": "pytest", "blocks_n_jobs": 1, "pct_of_targets": 17, "acquisition_difficulty": "low" }
+  ],
+  "score_ceiling": {
+    "change": "Add one tool-calling agent to DocQuery and deploy it on AWS Lambda.",
+    "jobs_moved": [
+      "Associate LLM Application Developer (Paperkite Software)",
+      "Junior AI Engineer (Orbitline Systems)"
+    ],
+    "expected_band_shift": "Paperkite moves from Stretch to Competitive. Orbitline gains its nice-to-have and moves toward Strong."
+  },
+  "positioning": {
+    "verdict": "Three role families is one too many for five months of experience. The evidence is all LLM application work; the backend role scores well only because DocQuery is a FastAPI service.",
+    "commit_to": ["Generative AI Developer", "AI Engineer"],
+    "drop": ["Python Backend Developer"]
+  },
+  "evidence_debt": [
+    { "skill": "Prompt Engineering", "risk": "Rests on one duty-style bullet. Expect to be asked what the templates did and how you tested them." },
+    { "skill": "AWS Cloud Fundamentals", "risk": "A certificate with no project behind it. An interviewer who asks which services you have used gets no answer." },
+    { "skill": "Sentence Transformers", "risk": "One bullet that says \"worked on\". Be ready to say which part you built." }
+  ],
+  "plan": [
+    {
+      "rank": 1,
+      "action": "Push DocQuery to a public GitHub repository, deploy it on a free tier, and put both links on the resume and LinkedIn.",
+      "why_this_one": "No project in the profile has a link, and all six scored jobs rely on DocQuery or the internship as evidence. This makes the existing claims checkable.",
+      "effort_hours": 4,
+      "cost": "Free",
+      "timeline": "this week",
+      "proof_artifact": "A public repository and a live URL",
+      "jobs_unlocked": [
+        "Generative AI Developer (Entry Level) (Lumen Forge AI)",
+        "Junior AI Engineer (Orbitline Systems)",
+        "Python Backend Developer I (Tallyroot)"
+      ]
+    },
+    {
+      "rank": 2,
+      "action": "Add a pytest suite to DocQuery and run it in the existing GitHub Actions pipeline.",
+      "why_this_one": "pytest is the one missing must-have at Tallyroot, and it is what holds that score at 60 when the dimensions add up to 73.",
+      "effort_hours": 5,
+      "cost": "Free",
+      "timeline": "this week",
+      "proof_artifact": "A passing CI badge in the DocQuery README",
+      "jobs_unlocked": ["Python Backend Developer I (Tallyroot)"]
+    },
+    {
+      "rank": 3,
+      "action": "Rewrite the two weak bullets with the numbers the resume analysis asked for.",
+      "why_this_one": "The prompt-template bullet is the only evidence for a must-have at Orbitline, and it currently states a duty.",
+      "effort_hours": 1,
+      "cost": "Free",
+      "timeline": "this week",
+      "proof_artifact": "An updated resume",
+      "jobs_unlocked": ["Junior AI Engineer (Orbitline Systems)"]
+    },
+    {
+      "rank": 4,
+      "action": "Add one tool-calling agent to DocQuery and deploy it on AWS Lambda with Amazon Bedrock. Write the README with an architecture diagram.",
+      "why_this_one": "Hands-on AWS is missing in 3 of 6 jobs and agents in 2 of 6. One project closes both. A deployed project beats a second certificate here: the postings ask for hands-on work, which the existing certificate does not show.",
+      "effort_hours": 30,
+      "cost": "Under USD 5 of AWS usage",
+      "timeline": "this month",
+      "proof_artifact": "A deployed endpoint and a README that names the AWS services used",
+      "jobs_unlocked": [
+        "Associate LLM Application Developer (Paperkite Software)",
+        "Junior AI Engineer (Orbitline Systems)"
+      ]
+    },
+    {
+      "rank": 5,
+      "action": "Apply to the Lumen Forge AI and Orbitline Systems roles with tailored resumes.",
+      "why_this_one": "They score 89 and 71 today. Nothing above needs to finish before applying to the first one.",
+      "effort_hours": 2,
+      "cost": "Free",
+      "timeline": "this week",
+      "proof_artifact": "Two submitted applications",
+      "jobs_unlocked": [
+        "Generative AI Developer (Entry Level) (Lumen Forge AI)",
+        "Junior AI Engineer (Orbitline Systems)"
+      ]
+    }
+  ],
+  "one_line_verdict": "Already strong for RAG developer roles; public links and tests are the cheapest wins, and one agent project on AWS opens the rest."
+}
