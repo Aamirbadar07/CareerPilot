@@ -20,6 +20,25 @@ Kept current per CLAUDE.md: update this file whenever a component is added.
 | Per-IP rate limit, PII-redacting log filter | `backend/app/core/rate_limit.py`, `logging.py` | Phase 2 |
 | Sample candidate (demo data and test fixtures) | `backend/app/sample/` | Phase 2 |
 | `artifacts` table: every agent output, keyed by (profile, kind, ref) | `backend/app/db/models.py` | Phase 2 |
+| Job sources: Remotive, Greenhouse boards, JSearch | `backend/app/agents/job_discovery/sources.py` | Phase 3 |
+| Job Discovery agent: query plan, code prefilter, normalise, no-invention guard | `backend/app/agents/job_discovery/agent.py` | Phase 3 |
+| Jobs API: discover, paste a description, list | `backend/app/api/jobs.py` | Phase 3 |
+
+## How job discovery works
+
+1. The model expands target roles into 8-15 queries (phase 1 of its prompt).
+2. Code fetches every source. Feeds (Remotive, Greenhouse) are fetched whole, cached for six
+   hours and filtered by title against the queries; JSearch is a search API with a quota, so
+   it receives at most five queries per run and is skipped when `RAPIDAPI_KEY` is empty.
+3. Code drops what needs no judgement: older than 45 days, excluded companies, exact
+   duplicates, titles above an entry-level band. The newest 30 survivors go on.
+4. The model merges fuzzy duplicates, drops spam and location mismatches, and extracts
+   must-haves, stack, years and salary (phase 2).
+5. Code rejects any job whose URL was not fetched, copies title, company, location and date
+   from the source rather than the model, and blanks a salary whose digits are not in the
+   posting.
+
+A source that fails is listed under `dropped` and the run continues.
 
 ## How an agent call works
 
@@ -55,3 +74,8 @@ SQLite is the zero-config default for local runs; set `DATABASE_URL` for Postgre
 | Remotive, RemoteOK, We Work Remotely | Remote-first roles | Public JSON, no key |
 | Greenhouse, Lever, Ashby boards | Direct company career pages | Public JSON per company |
 | Paste-a-link or paste-JD | Anything else, incl. Naukri | User-supplied |
+
+Wired so far: Remotive, Greenhouse, JSearch and pasted descriptions. Remotive's terms require
+a link back to the Remotive URL and naming Remotive as the source, and ask for at most about
+four fetches a day; the job card links to the source URL and shows the source name, and the
+feed is cached for six hours.
