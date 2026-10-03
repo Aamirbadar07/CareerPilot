@@ -23,6 +23,8 @@ Kept current per CLAUDE.md: update this file whenever a component is added.
 | Job sources: Remotive, Greenhouse boards, JSearch | `backend/app/agents/job_discovery/sources.py` | Phase 3 |
 | Job Discovery agent: query plan, code prefilter, normalise, no-invention guard | `backend/app/agents/job_discovery/agent.py` | Phase 3 |
 | Jobs API: discover, paste a description, list | `backend/app/api/jobs.py` | Phase 3 |
+| Fit scorer agent: six weighted dimensions, cap and band in code, 10 jobs at a time | `backend/app/agents/fit_scorer/` | Phase 4 |
+| Fit API: scores cached per (profile version, job) | `backend/app/api/jobs.py` | Phase 4 |
 
 ## How job discovery works
 
