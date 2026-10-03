@@ -7,6 +7,7 @@ from pathlib import Path
 
 from sqlalchemy.orm import Session
 
+from app.agents.job_discovery.agent import job_id
 from app.db import repositories as repo
 from app.schemas.profile import MasterProfile
 
@@ -22,11 +23,30 @@ def text(name: str) -> str:
     return (_DIR / name).read_text(encoding="utf-8")
 
 
+def profile() -> MasterProfile:
+    return MasterProfile.model_validate(load("analysis.json")["master_profile"])
+
+
+def jobs() -> list[dict]:
+    """Sample jobs with the ids the pipeline would give them."""
+    return [job | {"id": job_id(job["url"])} for job in load("jobs.json")["jobs"]]
+
+
 def seed(db: Session) -> None:
     """Insert the sample profile and its artifacts once."""
     if repo.get_profile(db, SAMPLE_ID) is not None:
         return
+    candidate = profile()
+    repo.save_profile(db, candidate)  # no ttl: never expires
+
+    def put(kind: str, data: dict, ref: str = "") -> None:
+        repo.put_artifact(db, SAMPLE_ID, kind, data, candidate.version, ref)
+
     analysis = load("analysis.json")
-    profile = MasterProfile.model_validate(analysis.pop("master_profile"))
-    repo.save_profile(db, profile)  # no ttl: never expires
-    repo.put_artifact(db, SAMPLE_ID, "resume_analysis", analysis, profile.version)
+    del analysis["master_profile"]
+    put("resume_analysis", analysis)
+    for job in jobs():
+        put("job", job, job["id"])
+    discovery = load("jobs.json")
+    del discovery["jobs"]
+    put("job_discovery", discovery)
