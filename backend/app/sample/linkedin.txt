@@ -1,0 +1,17 @@
+Asha Verma
+Aspiring AI Engineer | Passionate about Machine Learning
+Pune, Maharashtra, India
+
+About
+I am a final year computer science student who loves AI and wants to learn more about it.
+
+Experience
+AI Intern, Kestrel Data Labs
+Jan 2026 - Jun 2026
+Worked on chatbots.
+
+Education
+Pune Institute of Technology, B.Tech Computer Science, 2022 - 2026
+
+Skills
+Python, Machine Learning, Java, FastAPI

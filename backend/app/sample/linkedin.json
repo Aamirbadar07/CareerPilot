@@ -1,0 +1,71 @@
+{
+  "headline": [
+    "Generative AI Developer | RAG, LangChain, FastAPI | Built and evaluated a support chatbot over 1,200 documents",
+    "AI Engineer (Entry Level) | Python, RAG, LLM Evaluation | B.Tech Computer Science 2026",
+    "LLM Application Developer | LangChain, FastAPI, pgvector | Open to remote AI roles"
+  ],
+  "about": [
+    "I build retrieval-augmented LLM applications in Python: the pipeline, the API around it, and the evaluation that says whether the answers can be trusted.",
+    "At Kestrel Data Labs I built a RAG chatbot over 1,200 internal support documents with LangChain and FastAPI. It cut the average answer lookup time from 6 minutes to under 1 minute. Before release I wrote an evaluation script that scored 150 question-answer pairs for groundedness and caught 18 hallucinated answers.",
+    "On my own time I built DocQuery, a FastAPI service that answers questions over uploaded PDFs using embeddings stored in PostgreSQL with pgvector. It is containerised with Docker and deployed through a GitHub Actions pipeline.",
+    "I graduate with a B.Tech in Computer Science in 2026 and I am looking for a remote, entry-level Generative AI Developer or AI Engineer role. Message me here or use the email on my profile."
+  ],
+  "experience_rewrites": [
+    {
+      "exp_id": "exp_1",
+      "scope": "Built and evaluated the company's internal support chatbot during a 5-month remote internship.",
+      "bullets": [
+        "Built a RAG chatbot over 1,200 internal support documents using LangChain and FastAPI, which cut average answer lookup time from 6 minutes to under 1 minute.",
+        "Added an evaluation script that scored 150 question-answer pairs for groundedness and caught 18 hallucinated answers before release.",
+        "Wrote the prompt templates used by the support assistant."
+      ]
+    }
+  ],
+  "skills_order": [
+    { "name": "RAG", "pinned": true },
+    { "name": "LangChain", "pinned": true },
+    { "name": "Python", "pinned": true },
+    { "name": "FastAPI", "pinned": false },
+    { "name": "LLM Evaluation", "pinned": false },
+    { "name": "Prompt Engineering", "pinned": false },
+    { "name": "PostgreSQL", "pinned": false },
+    { "name": "pgvector", "pinned": false },
+    { "name": "Docker", "pinned": false },
+    { "name": "GitHub Actions", "pinned": false },
+    { "name": "Sentence Transformers", "pinned": false },
+    { "name": "AWS Cloud Fundamentals", "pinned": false }
+  ],
+  "keyword_gaps": [
+    { "term": "Retrieval-Augmented Generation", "status": "addable-now", "note": "Spell RAG out once in the About section; recruiters search both forms." },
+    { "term": "Vector Database", "status": "addable-now", "note": "pgvector is one. Say so in the DocQuery description." },
+    { "term": "CI/CD", "status": "addable-now", "note": "The GitHub Actions pipeline is CI/CD." },
+    { "term": "AI Agents", "status": "needs-work", "note": "No agent or tool-calling work in the profile yet." },
+    { "term": "Amazon Bedrock", "status": "needs-work", "note": "The AWS certificate covers fundamentals only." }
+  ],
+  "consistency_check": [
+    { "field": "headline", "resume_value": "Generative AI Developer", "linkedin_value": "Aspiring AI Engineer | Passionate about Machine Learning", "correct_value": "Generative AI Developer" },
+    { "field": "experience role", "resume_value": "AI Engineering Intern", "linkedin_value": "AI Intern", "correct_value": "AI Engineering Intern" },
+    { "field": "experience start date", "resume_value": "Feb 2026", "linkedin_value": "Jan 2026", "correct_value": "Feb 2026" },
+    { "field": "skills", "resume_value": null, "linkedin_value": "Java", "correct_value": "Remove Java from LinkedIn, or add work that shows it to the resume." },
+    { "field": "skills", "resume_value": "RAG, LangChain, PostgreSQL, Docker", "linkedin_value": null, "correct_value": "Add these to LinkedIn; they are the core of the resume." }
+  ],
+  "profile_strength": {
+    "score": 23,
+    "components": [
+      { "name": "headline", "score": 5, "max": 20, "why": "Leads with \"Aspiring\", which recruiters do not search for, and names no stack." },
+      { "name": "about", "score": 4, "max": 20, "why": "One sentence about being a student. Nothing about what was built." },
+      { "name": "experience", "score": 8, "max": 25, "why": "The role is listed, but the description is three words and the title and start date differ from the resume." },
+      { "name": "skills", "score": 6, "max": 20, "why": "Four skills, one of them unsupported, and the strongest ones are missing." },
+      { "name": "featured and links", "score": 0, "max": 15, "why": "Nothing pinned and no repository linked." }
+    ],
+    "top_changes": [
+      "Replace the headline with the first variant. It takes one minute and fixes the search keyword.",
+      "Paste the experience rewrite and correct the title and start date to match the resume.",
+      "Add the pinned skills RAG, LangChain and Python, and remove Java."
+    ]
+  },
+  "featured_suggestions": [
+    { "item": "DocQuery repository", "why": "It is the only project with a deployable service; a link lets a recruiter verify the FastAPI and pgvector claims." },
+    { "item": "A short post on the groundedness evaluation", "why": "The 150-pair evaluation that caught 18 hallucinated answers is the most distinctive result in the profile." }
+  ]
+}
