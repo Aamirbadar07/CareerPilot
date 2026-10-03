@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app import sample
-from app.api import health, jobs, profiles, tailor
+from app.api import advice, credentials, health, jobs, profiles, runs, tailor
 from app.core.config import settings
 from app.core.llm import LLMError
 from app.core.logging import setup_logging
@@ -41,3 +41,6 @@ app.include_router(health.router)
 app.include_router(profiles.router)
 app.include_router(jobs.router)
 app.include_router(tailor.router)
+app.include_router(advice.router)
+app.include_router(credentials.router)
+app.include_router(runs.router)

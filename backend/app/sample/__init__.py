@@ -3,6 +3,7 @@ for agent tests. The JSON files here are hand-authored to the agents' output con
 are not recordings of model output."""
 
 import json
+from datetime import timedelta
 from pathlib import Path
 
 from sqlalchemy.orm import Session
@@ -23,8 +24,9 @@ def text(name: str) -> str:
     return (_DIR / name).read_text(encoding="utf-8")
 
 
-def profile() -> MasterProfile:
-    return MasterProfile.model_validate(load("analysis.json")["master_profile"])
+def profile(profile_id: str = SAMPLE_ID) -> MasterProfile:
+    data = load("analysis.json")["master_profile"] | {"profile_id": profile_id}
+    return MasterProfile.model_validate(data)
 
 
 def jobs() -> list[dict]:
@@ -32,19 +34,21 @@ def jobs() -> list[dict]:
     return [job | {"id": job_id(job["url"])} for job in load("jobs.json")["jobs"]]
 
 
-def seed(db: Session) -> None:
+def seed(db: Session, profile_id: str = SAMPLE_ID, ttl: timedelta | None = None) -> None:
     """Insert the sample profile once; refresh its artifacts on every start so a deploy with
-    edited sample files shows them."""
-    candidate = profile()
-    if repo.get_profile(db, SAMPLE_ID) is None:
-        repo.save_profile(db, candidate)  # no ttl: never expires
+    edited sample files shows them. Tests seed the same data under another id to get a
+    profile that is not read-only."""
+    candidate = profile(profile_id)
+    if repo.get_profile(db, profile_id) is None:
+        repo.save_profile(db, candidate, ttl)  # the sample itself has no ttl: it never expires
 
     def put(kind: str, data: dict, ref: str = "") -> None:
-        repo.put_artifact(db, SAMPLE_ID, kind, data, candidate.version, ref)
+        repo.put_artifact(db, profile_id, kind, data, candidate.version, ref)
 
     analysis = load("analysis.json")
     del analysis["master_profile"]
     put("resume_analysis", analysis)
+
     fits, tailored = load("fits.json"), load("tailored.json")
     for job in jobs():
         put("job", job, job["id"])
@@ -54,3 +58,5 @@ def seed(db: Session) -> None:
     discovery = load("jobs.json")
     del discovery["jobs"]
     put("job_discovery", discovery)
+    put("linkedin", load("linkedin.json"))
+    put("coaching_plan", load("coach.json"))
