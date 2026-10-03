@@ -44,7 +44,6 @@ def analyze_resume(llm: LLM, raw_resume_text: str, source_file: str) -> ResumeAn
         from app.schemas.profile import TargetRole
 
         profile.target_roles = [
-            TargetRole(title=r.title, priority=i + 1)
-            for i, r in enumerate(result.target_roles)
+            TargetRole(title=r.title, priority=i + 1) for i, r in enumerate(result.target_roles)
         ]
     return result
