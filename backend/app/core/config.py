@@ -7,6 +7,8 @@ class Settings(BaseSettings):
     anthropic_api_key: str = ""
     anthropic_model: str = "claude-sonnet-4-6"
     database_url: str = ""
+    rapidapi_key: str = ""  # JSearch; the source is skipped when empty
+    greenhouse_boards: str = "gitlab"  # comma-separated board tokens
     # Uploaded profiles are deleted after this many hours (docs/decisions/0004-demo-mode.md).
     profile_ttl_hours: int = 24
 
