@@ -29,6 +29,53 @@ Kept current per CLAUDE.md: update this file whenever a component is added.
 | Resume template and renderer (Jinja2, WeasyPrint, one-page fit) | `backend/app/templates/resume.html`, `backend/app/core/render.py` | Phase 5 |
 | Tailor API: run, read with original for diff, HTML preview, PDF | `backend/app/api/tailor.py` | Phase 5 |
 | Deployment: Docker image, Render blueprint, CORS for the frontend origin | `backend/Dockerfile`, `render.yaml` | Phase 5 |
+| Shared no-fabrication checks (numbers, skills, softeners) | `backend/app/core/guard.py` | Phase 7 |
+| LinkedIn Optimizer agent: copy-paste text only | `backend/app/agents/linkedin_optimizer/` | Phase 7 |
+| Credentials agent: propose, user confirms, new profile version | `backend/app/agents/credentials/`, `backend/app/core/profile_ops.py` | Phase 7 |
+| Career Coach agent: one plan across all fit reports | `backend/app/agents/career_coach/` | Phase 8 |
+| Orchestrator: LangGraph state machine, model router guarded by code | `backend/app/agents/orchestrator/` | Phase 8 |
+| Runs and Server-Sent Events progress | `backend/app/core/runs.py`, `backend/app/api/runs.py` | Phase 8 |
+| Pipeline steps shared by API routes and graph nodes | `backend/app/services.py` | Phase 8 |
+
+## How a run is orchestrated
+
+```mermaid
+flowchart LR
+    U[Upload resume] --> R{router}
+    R --> A[resume_analyzer] --> R
+    R --> J[job_discovery] --> R
+    R --> F[fit_scorer<br/>10 jobs at a time] --> R
+    R --> T[resume_tailor<br/>selected jobs only] --> R
+    R --> L[linkedin_optimizer] --> R
+    R --> C[career_coach] --> R
+    R --> E([done])
+    A -. master profile .-> DB[(profile_versions<br/>artifacts)]
+    DB -. read by every agent .-> R
+```
+
+- The graph is a LangGraph `StateGraph`: one node per agent plus a router. Every agent
+  returns to the router.
+- The router first works out, in code, which agents have their inputs right now (the
+  `needs:` column of the orchestrator prompt). Only if more than one is runnable does it
+  ask the orchestrator model to choose. An answer outside the runnable set, or no answer,
+  falls back to pipeline order. The model can reorder a run; it cannot break one.
+- An agent that raises is retried once. A second failure marks that branch degraded and
+  the run continues. An agent whose inputs can never arrive is reported as skipped.
+- Before and after every agent call the run emits `{agent, status, detail}`. The frontend
+  reads these from `GET /api/runs/{id}/stream` (Server-Sent Events; event ids allow resume).
+- `resume_tailor` runs only for job ids the user selected. `credentials` is outside the
+  graph: it needs a credential and the user's confirmation, so it has its own endpoints.
+
+## How a new certificate flows through
+
+1. `POST /credentials` reads the file, link or statement and returns a proposal. Code sets
+   the id, decides `verified` (true only if a credential id or URL was actually supplied),
+   detects duplicates, writes the confirmation sentence and builds LinkedIn's pre-filled
+   add-certification link. The link the user gives is never fetched.
+2. Nothing is written until `POST /credentials/{id}/confirm`.
+3. Confirming stores profile version N+1 with a `change_log` entry, deletes tailored resumes
+   and the coaching plan, and leaves fit reports and LinkedIn copy stale (they are keyed by
+   profile version). The next tailoring run uses the new profile.
 
 ## How tailoring stays honest
 
