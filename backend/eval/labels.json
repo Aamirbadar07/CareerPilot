@@ -1,0 +1,11 @@
+{
+  "_about": "Hand-assigned match bands for job-profile pairs, written before running the scorer. These six use the built-in sample profile and sample jobs. Add your own profile and real jobs here: the agreement rate only means something once the labels are yours.",
+  "pairs": [
+    { "profile": "sample", "job_url": "https://example.com/sample-jobs/lumen-forge-genai-developer", "band": "Strong", "why": "Every must-have is evidenced and the internship project is the same kind of product." },
+    { "profile": "sample", "job_url": "https://example.com/sample-jobs/orbitline-junior-ai-engineer", "band": "Competitive", "why": "Core skills match; experience is short of the stated year and no nice-to-have is met." },
+    { "profile": "sample", "job_url": "https://example.com/sample-jobs/paperkite-associate-llm-developer", "band": "Stretch", "why": "Two of four must-haves (agents, hands-on AWS) are missing." },
+    { "profile": "sample", "job_url": "https://example.com/sample-jobs/tallyroot-python-backend-developer", "band": "Competitive", "why": "Good backend match, but pytest is a must-have with no evidence, so the cap applies." },
+    { "profile": "sample", "job_url": "https://example.com/sample-jobs/quillstack-ml-engineer-genai", "band": "Stretch", "why": "A training role; the profile is application engineering." },
+    { "profile": "sample", "job_url": "https://example.com/sample-jobs/harborlight-ai-solutions-engineer", "band": "Poor", "why": "Needs two years of AWS and client work." }
+  ]
+}

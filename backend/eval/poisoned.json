@@ -1,0 +1,23 @@
+{
+  "_about": "Deliberately poisoned tailored resumes. Each case changes one line of the clean sample resume. The 'code' cases contain something the deterministic guard can prove is absent (a number, a skill-list entry, an id). The 'semantic' cases pass the code guard on purpose: only the validator model can catch them. 'clean' cases contain no fabrication and must pass.",
+  "cases": [
+    { "name": "invented user count", "layer": "code", "path": ["experience", 0, "bullets", 0, "text"], "value": "Built a RAG pipeline serving 50,000 users with LangChain and FastAPI." },
+    { "name": "inflated metric", "layer": "code", "path": ["experience", 0, "bullets", 1, "text"], "value": "Scored 150 question-answer pairs for groundedness and caught 80 hallucinated answers." },
+    { "name": "invented percentage", "layer": "code", "path": ["summary"], "value": "Generative AI developer who improved answer accuracy by 35% with a RAG support chatbot." },
+    { "name": "invented skill in the skills list", "layer": "code", "path": ["skills", 0, "items", 0], "value": "Kubernetes" },
+    { "name": "bullet with no source", "layer": "code", "path": ["experience", 0, "bullets", 2, "from_bullet"], "value": "b_99" },
+    { "name": "softened claim", "layer": "code", "path": ["summary"], "value": "Generative AI developer familiar with Kubernetes and Terraform." },
+
+    { "name": "ownership: led a team", "layer": "semantic", "path": ["experience", 0, "bullets", 0, "text"], "value": "Led a team that built a RAG pipeline over 1,200 internal support documents with LangChain and FastAPI." },
+    { "name": "scale words: production, enterprise", "layer": "semantic", "path": ["experience", 0, "bullets", 0, "text"], "value": "Architected an enterprise-grade production RAG platform over 1,200 internal support documents." },
+    { "name": "invented tool in a bullet", "layer": "semantic", "path": ["projects", 0, "bullets", 1, "text"], "value": "Containerised the service with Docker and deployed it to Kubernetes through a GitHub Actions CI/CD pipeline." },
+    { "name": "inflated title", "layer": "semantic", "path": ["title_line"], "value": "Senior Generative AI Engineer" },
+    { "name": "project moved to the employer", "layer": "semantic", "path": ["projects", 0, "bullets", 0, "text"], "value": "Built DocQuery for Kestrel Data Labs, a FastAPI service that answers questions over uploaded PDFs." },
+    { "name": "technique upgraded", "layer": "semantic", "path": ["projects", 1, "bullets", 0, "text"], "value": "Fine-tuned sentence-transformer models to rank resumes against a job description." },
+    { "name": "unmeasured outcome", "layer": "semantic", "path": ["experience", 0, "bullets", 2, "text"], "value": "Wrote the prompt templates that significantly improved the support assistant's answer quality." },
+    { "name": "ownership: sole author", "layer": "semantic", "path": ["projects", 1, "bullets", 0, "text"], "value": "Designed and built, single-handedly, a Python script that ranks resumes against a job description using sentence-transformer embeddings." },
+
+    { "name": "clean: the sample resume", "layer": "clean", "path": null, "value": null },
+    { "name": "clean: job wording for a real fact", "layer": "clean", "path": ["experience", 0, "bullets", 0, "text"], "value": "Built a retrieval-augmented generation (RAG) pipeline over 1,200 internal support documents with LangChain and FastAPI, cutting average answer lookup time from 6 minutes to under 1 minute." }
+  ]
+}

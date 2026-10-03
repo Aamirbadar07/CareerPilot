@@ -1,6 +1,7 @@
 import hashlib
 import json
 import re
+import threading
 from collections.abc import Callable
 from typing import Protocol, TypeVar
 
@@ -46,6 +47,9 @@ class LLM:
         self._client = client
         self.cache = cache
         self.model = settings.anthropic_model
+        # Token totals for cost reporting (eval/run_eval.py). Fit scoring calls from threads.
+        self.usage = {"calls": 0, "input_tokens": 0, "output_tokens": 0}
+        self._usage_lock = threading.Lock()
 
     def _raw(self, system: str, messages: list[dict]) -> str:
         if self._client is None:
@@ -65,6 +69,10 @@ class LLM:
             if "authentication" not in str(e):
                 raise
             raise LLMError("no Anthropic credentials configured") from None
+        with self._usage_lock:
+            self.usage["calls"] += 1
+            self.usage["input_tokens"] += message.usage.input_tokens
+            self.usage["output_tokens"] += message.usage.output_tokens
         if message.stop_reason in ("max_tokens", "refusal"):
             raise LLMError(f"model stopped early: {message.stop_reason}")
         return "".join(block.text for block in message.content if block.type == "text")
