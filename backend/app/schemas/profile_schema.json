@@ -1,0 +1,55 @@
+{
+  "profile_id": "uuid",
+  "version": 7,
+  "updated_at": "2026-10-03T09:00:00Z",
+  "identity": {
+    "full_name": "", "title_line": "", "location": "",
+    "email": "", "phone": "", "linkedin": "", "github": "", "portfolio": ""
+  },
+  "summary_source": "raw summary text from the uploaded resume",
+  "skills": [
+    { "name": "Python", "category": "language",
+      "evidence": ["exp_1", "proj_2"], "level": "advanced",
+      "first_seen": "2024-01", "verified": true }
+  ],
+  "experience": [
+    { "id": "exp_1", "company": "", "role": "", "employment_type": "internship",
+      "location": "", "remote": true,
+      "start": "2026-02", "end": "2026-06", "current": false,
+      "bullets": [
+        { "id": "b_1", "text": "", "skills": ["Python"],
+          "metric": null, "impact_verb": "built" }
+      ],
+      "tech": ["Python", "FastAPI"] }
+  ],
+  "projects": [
+    { "id": "proj_1", "name": "", "one_liner": "",
+      "bullets": [{ "id": "pb_1", "text": "", "skills": [] }],
+      "tech": [], "repo_url": "", "live_url": "", "date": "2026-08" }
+  ],
+  "education": [
+    { "degree": "", "field": "", "institution": "",
+      "start": "", "end": "", "score": "", "score_type": "CGPA" }
+  ],
+  "certifications": [
+    { "id": "cert_1", "name": "", "issuer": "", "issued": "2026-09",
+      "expires": null, "credential_id": "", "credential_url": "",
+      "skills_covered": [], "verified": false, "source": "upload|link|manual" }
+  ],
+  "achievements": [{ "text": "", "date": "" }],
+  "target_roles": [
+    { "title": "", "seniority": "entry", "keywords": [], "priority": 1 }
+  ],
+  "preferences": {
+    "remote_only": true, "locations": [], "min_salary": null,
+    "currency": "INR", "employment_types": ["full-time", "internship"],
+    "exclude_companies": []
+  },
+  "provenance": {
+    "source_file": "resume.pdf", "parsed_at": "",
+    "change_log": [
+      { "version": 7, "agent": "credentials", "change": "added cert_3",
+        "at": "2026-10-03T09:00:00Z", "approved_by_user": true }
+    ]
+  }
+}
