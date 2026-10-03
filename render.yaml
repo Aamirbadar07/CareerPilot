@@ -1,0 +1,16 @@
+# Render blueprint for the backend. Secrets are entered in the Render dashboard, never here.
+services:
+  - type: web
+    name: careerpilot-api
+    runtime: docker
+    rootDir: backend
+    healthCheckPath: /health
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: RAPIDAPI_KEY
+        sync: false
+      - key: FRONTEND_ORIGIN
+        sync: false

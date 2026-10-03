@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     database_url: str = ""
     rapidapi_key: str = ""  # JSearch; the source is skipped when empty
     greenhouse_boards: str = "gitlab"  # comma-separated board tokens
+    frontend_origin: str = "http://localhost:3000"  # the only origin CORS allows
     # Uploaded profiles are deleted after this many hours (docs/decisions/0004-demo-mode.md).
     profile_ttl_hours: int = 24
 
