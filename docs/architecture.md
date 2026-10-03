@@ -25,6 +25,24 @@ Kept current per CLAUDE.md: update this file whenever a component is added.
 | Jobs API: discover, paste a description, list | `backend/app/api/jobs.py` | Phase 3 |
 | Fit scorer agent: six weighted dimensions, cap and band in code, 10 jobs at a time | `backend/app/agents/fit_scorer/` | Phase 4 |
 | Fit API: scores cached per (profile version, job) | `backend/app/api/jobs.py` | Phase 4 |
+| Resume Tailor: writer call, deterministic guard, adversarial validator call | `backend/app/agents/resume_tailor/` | Phase 5 |
+| Resume template and renderer (Jinja2, WeasyPrint, one-page fit) | `backend/app/templates/resume.html`, `backend/app/core/render.py` | Phase 5 |
+| Tailor API: run, read with original for diff, HTML preview, PDF | `backend/app/api/tailor.py` | Phase 5 |
+| Deployment: Docker image, Render blueprint, CORS for the frontend origin | `backend/Dockerfile`, `render.yaml` | Phase 5 |
+
+## How tailoring stays honest
+
+1. The tailor writes content JSON only. Employers, titles, dates, education and
+   certifications are never in its output; the renderer reads them from the profile.
+2. Code checks what code can prove: every id exists, every skill names a profile skill,
+   every number already appears in the profile (or is the computed experience length), and
+   no claim is softened with "familiar with". A failure is fed back once.
+3. A second model call, with a different prompt, labels every claim SUPPORTED, REWORDED,
+   OVERSTATED or UNSUPPORTED. Code derives the verdict from those labels.
+4. On a fail the tailor is re-run once with the findings. A second fail returns the
+   untailored resume with the reason. The user never receives an unvalidated rewrite.
+5. If the rendered page overflows, the tailor is asked once for a tighter cut; after that
+   code removes the least relevant trailing content, which cannot add a claim.
 
 ## How job discovery works
 
