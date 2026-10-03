@@ -11,6 +11,9 @@ dependencies = [
     "alembic>=1.20.0",
     "psycopg[binary]>=3.3.6",
     "anthropic>=1.11.0",
+    "pypdf>=6.19.0",
+    "python-docx>=1.2.0",
+    "python-multipart>=0.0.32",
 ]
 
 [dependency-groups]
@@ -26,3 +29,6 @@ testpaths = ["tests", "app"]
 
 [tool.ruff]
 line-length = 100
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["fastapi.Depends"]
