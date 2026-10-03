@@ -36,6 +36,27 @@ Kept current per CLAUDE.md: update this file whenever a component is added.
 | Orchestrator: LangGraph state machine, model router guarded by code | `backend/app/agents/orchestrator/` | Phase 8 |
 | Runs and Server-Sent Events progress | `backend/app/core/runs.py`, `backend/app/api/runs.py` | Phase 8 |
 | Pipeline steps shared by API routes and graph nodes | `backend/app/services.py` | Phase 8 |
+| Frontend: design tokens, landing, app shell | `frontend/app/globals.css`, `frontend/components/landing.tsx`, `frontend/app/(app)/layout.tsx` | Phase 6 |
+| Frontend pages: dashboard, resume, jobs, job detail, tailor, LinkedIn, certifications, coach, settings | `frontend/app/(app)/` | Phase 6 |
+| Live agent stepper (Server-Sent Events), score ring, resume diff | `frontend/components/` | Phase 6 |
+
+## Frontend
+
+Next.js 14 App Router, TypeScript and Tailwind. Every colour is a CSS variable in
+`frontend/app/globals.css`; Tailwind class names are aliases for those variables, so no
+component hardcodes a colour and both themes come from one file. Band colours exist twice:
+a bright one for rings and fills, and a darker `-fg` one that passes WCAG AA as text.
+
+The browser keeps one profile id in local storage (`sample` until a resume is uploaded) and
+talks to the backend directly at `NEXT_PUBLIC_API_URL`. There is no server-side data
+fetching and no frontend state library: each page loads what it shows.
+
+Components in `frontend/components/ui/` follow shadcn/ui conventions (`cn`, `cva`, Radix
+`Slot`) and were written by hand to keep the set small; `components.json` is present, so
+`npx shadcn add <component>` works when more are needed.
+
+Motion is limited to transform and opacity, 200 to 600 ms, and is replaced by instant state
+changes under `prefers-reduced-motion`.
 
 ## How a run is orchestrated
 
