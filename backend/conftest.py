@@ -111,3 +111,12 @@ def no_network(monkeypatch):
         raise AssertionError(f"test tried to fetch {url}")
 
     monkeypatch.setattr(sources, "get_json", blocked)
+    # Tests must not depend on, or spend, whatever is in the developer's .env.
+    from app.core.config import settings
+
+    for name, value in (
+        ("llm_provider", "anthropic"),
+        ("anthropic_api_key", ""),
+        ("google_api_key", ""),
+    ):
+        monkeypatch.setattr(settings, name, value)

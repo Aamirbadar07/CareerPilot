@@ -15,8 +15,9 @@ Two rules shape everything:
 
 ## Status
 
-Built and tested against hand-authored fixtures. **No agent has yet been run against the
-real model, the PDF renderer has not been run, and nothing is deployed.**
+Built and tested against hand-authored fixtures. **Only the fact-checker and the fit scorer
+have run against a real model (Gemini Flash-Lite), the PDF renderer has not been run, and
+nothing is deployed.**
 [`docs/evaluation.md`](docs/evaluation.md) lists what was measured and what was not.
 
 ## How it works

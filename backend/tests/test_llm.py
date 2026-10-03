@@ -97,3 +97,61 @@ def test_google_provider_fails_loudly_when_cut_off_or_unconfigured(monkeypatch):
     client = NS(models=NS(generate_content=lambda **kwargs: cut))
     with pytest.raises(LLMError, match="MAX_TOKENS"):
         llm_module.LLM(client=client).complete("sys", "x", Out)
+
+
+def test_google_provider_waits_and_retries_when_rate_limited(monkeypatch):
+    from types import SimpleNamespace as NS
+
+    from app.core import llm as llm_module
+
+    monkeypatch.setattr(llm_module.settings, "llm_provider", "google")
+    waits = []
+    monkeypatch.setattr(llm_module.time, "sleep", waits.append)
+    limited = llm_module.genai_errors.ClientError(
+        429, {"error": {"message": "Quota exceeded. Please retry in 12.5s.", "status": "X"}}
+    )
+    busy = llm_module.genai_errors.ServerError(503, {"error": {"message": "overloaded"}})
+    ok = NS(
+        text=GOOD,
+        candidates=[NS(finish_reason=NS(name="STOP"))],
+        usage_metadata=NS(prompt_token_count=1, candidates_token_count=1, thoughts_token_count=0),
+    )
+    answers = iter([limited, busy, ok])
+
+    def generate_content(**kwargs):
+        answer = next(answers)
+        if isinstance(answer, Exception):
+            raise answer
+        return answer
+
+    client = NS(models=NS(generate_content=generate_content))
+    assert llm_module.LLM(client=client).complete("sys", "x", Out) == Out(name="a", n=1)
+    assert waits == [13.5, 4.0]  # the server's delay plus a second, then exponential
+
+    denied = llm_module.genai_errors.ClientError(403, {"error": {"message": "bad key"}})
+    client = NS(models=NS(generate_content=lambda **kwargs: (_ for _ in ()).throw(denied)))
+    with pytest.raises(LLMError, match="403"):  # not retryable: fails at once
+        llm_module.LLM(client=client).complete("sys", "x", Out)
+    assert len(waits) == 2
+
+
+def test_google_daily_quota_fails_at_once_instead_of_retrying(monkeypatch):
+    from types import SimpleNamespace as NS
+
+    from app.core import llm as llm_module
+
+    monkeypatch.setattr(llm_module.settings, "llm_provider", "google")
+    monkeypatch.setattr(llm_module.time, "sleep", lambda s: pytest.fail("must not wait"))
+    calls = []
+    spent = llm_module.genai_errors.ClientError(
+        429, {"error": {"message": "You exceeded your current quota. Please retry in 24337.5s."}}
+    )
+
+    def generate_content(**kwargs):
+        calls.append(1)
+        raise spent
+
+    client = NS(models=NS(generate_content=generate_content))
+    with pytest.raises(LLMError, match="daily quota used up.*6.8 h"):
+        llm_module.LLM(client=client).complete("sys", "x", Out)
+    assert len(calls) == 1

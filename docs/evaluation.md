@@ -14,9 +14,9 @@ uv run python -m eval.run_eval --live   # all sections: calls the model and cost
 | Section | What it measures | Result |
 |---|---|---|
 | 1a | Code guard catch rate on poisoned resumes | **Measured**, below |
-| 1b | Validator model catch rate on poison the code guard cannot see | **Not run yet** (needs an API key) |
-| 2 | Fit-band agreement with hand labels | **Not run yet** (needs an API key) |
-| 3 | Latency and cost per call | **Not run yet** (needs an API key) |
+| 1b | Validator model catch rate on poison the code guard cannot see | **Measured** on `gemini-3.5-flash-lite`, below |
+| 2 | Fit-band agreement with hand labels | **Measured** on `gemini-3.5-flash-lite`, below: 2 of 6 |
+| 3 | Latency and cost per call | Latency **measured**; cost not computed (free tier) |
 
 Every fixture under `backend/app/sample/` is hand-authored to the agents' output contracts.
 None is a recording of model output, so the unit tests prove the code around the model
@@ -50,13 +50,15 @@ list. Only the validator stands between that sentence and the user.
 
 ### 1b. Validator model
 
-Not run yet. The script reports semantic poison caught out of 8 and clean resumes wrongly
-failed out of 2. Fill in:
+Measured 2026-10-03 on `gemini-3.5-flash-lite` (Google free tier), one run.
 
 | | Result |
 |---|---|
-| Semantic poison caught | _ of 8 |
-| Clean resumes wrongly failed | _ of 2 |
+| Semantic poison caught | 8 of 8 |
+| Clean resumes wrongly failed | 0 of 2 |
+
+Eight cases and one run is a small sample: it shows the validator works on these kinds of
+poison, not what its miss rate is. Add cases to `poisoned.json` before quoting a rate.
 
 ## 2. Fit-band agreement
 
@@ -65,9 +67,29 @@ six pairs for the sample profile, labelled by the author of the fixtures. The pa
 done-when for the fit scorer is "scores and bands that you agree with on 10 real jobs":
 add your own profile and ten real postings to the labels file before quoting this number.
 
-| | Result |
-|---|---|
-| Bands that match the hand label | _ of 6 |
+Measured 2026-10-03 on `gemini-3.5-flash-lite`, one run.
+
+| Job | Hand label | Model band | Model score |
+|---|---|---|---|
+| Generative AI Developer (Entry Level) | Strong | Strong | 98 |
+| Junior AI Engineer | Competitive | Strong | 90 |
+| Associate LLM Application Developer | Stretch | Competitive | 60 |
+| Python Backend Developer I | Competitive | Competitive | 60 |
+| ML Engineer - GenAI (Graduate) | Stretch | Competitive | 60 |
+| AI Solutions Engineer | Poor | Stretch | 52 |
+
+**Agreement: 2 of 6.** Every disagreement is the model scoring one band higher than the
+hand label. Two things explain it:
+
+- The model is generous on the dimensions. It gave 98 where the hand score was 89.
+- Three jobs sit at exactly 60. That is the must-have cap, and 60 falls inside the
+  Competitive band (55 to 74). So any job with a missing must-have and generous dimension
+  scores is reported as Competitive, even with two must-haves missing. The prompt's cap and
+  its band table interact this way by design; whether a capped job should be able to read
+  "Competitive" is an open question for the prompt's author.
+
+This is the smallest and cheapest Gemini model, and the prompts were written for Claude.
+Re-run on the intended model before drawing conclusions about the scorer.
 
 What the unit tests already establish about scoring: the score is the sum of the
 dimensions, a missing must-have caps it at 60, the band always follows from the score, a
@@ -75,13 +97,14 @@ skill without profile evidence cannot be counted, and a stated hire probability 
 
 ## 3. Latency and cost
 
-Not run yet. The script prints the median latency per agent call and the token cost of the
-evaluation at the listed price for `ANTHROPIC_MODEL`.
+Measured 2026-10-03 on `gemini-3.5-flash-lite`: 16 calls, 39,181 input tokens and 5,135
+output tokens.
 
 | | Result |
 |---|---|
-| Median latency per agent call | _ s |
-| Cost of one evaluation run | $ _ |
+| Median latency per agent call | 1.9 s |
+| Validation retries needed | 0 of 16 calls |
+| Cost of one evaluation run | not computed: run on the free tier, and no Gemini price is listed in the script |
 
 A full pipeline run makes about 2 calls for discovery, 1 per job for fit, 1 for the coach,
 1 for LinkedIn if text was pasted, at most 1 for routing, and 2 to 4 per tailored resume.
@@ -99,7 +122,11 @@ Identical inputs are served from the content-hash cache and cost nothing.
 
 ## Not verified
 
-- No agent has been run against the real model. No API key was available during the build.
+- Only the validator and the fit scorer have run against a real model, and only on
+  `gemini-3.5-flash-lite`. The analyzer, job discovery, tailor, LinkedIn, credentials and
+  coach agents have not. Nothing has run on Claude, the model the prompts were written for.
+- The Gemini free tier is tight: `gemini-3.8-flash` ran out of daily quota during the first
+  attempt, so the default Gemini model has not completed an evaluation.
 - PDF rendering. WeasyPrint needs Pango, which is not on the Windows dev machine. The two
   PDF tests run in CI and in the Docker image; neither has been run yet.
 - The Docker image has not been built and nothing is deployed.

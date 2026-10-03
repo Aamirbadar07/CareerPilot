@@ -2,6 +2,7 @@ import hashlib
 import json
 import re
 import threading
+import time
 from collections.abc import Callable
 from typing import Protocol, TypeVar
 
@@ -35,6 +36,31 @@ def repair_json(text: str) -> str:
     if starts and end > min(starts):
         text = text[min(starts) : end + 1]
     return re.sub(r",\s*([}\]])", r"\1", text)
+
+
+GOOGLE_ATTEMPTS = 6
+
+
+def _retry_delay(e: Exception, attempt: int) -> float:
+    """Seconds to wait before retrying a rate-limited Gemini call: what the server asked for
+    ("Please retry in 12.5s") plus a second, else exponential.
+
+    A wait of more than two minutes means the daily quota is gone, not the per-minute one.
+    Retrying cannot help and each attempt is refused anyway, so that fails at once."""
+    # The delay arrives as a RetryInfo detail ("retryDelay": "24337s") and usually also in
+    # the message text; the JSON is searched as text so either place is found.
+    body = json.dumps(getattr(e, "details", None), default=str) + (
+        getattr(e, "message", None) or ""
+    )
+    asked = re.search(r'retryDelay": "([\d.]+)s|retry in ([\d.]+)s', body)
+    if not asked:
+        return min(60.0, 2.0**attempt)
+    seconds = float(asked.group(1) or asked.group(2))
+    if seconds > 120:
+        raise LLMError(
+            f"Gemini daily quota used up for this model; resets in {seconds / 3600:.1f} h"
+        )
+    return seconds + 1
 
 
 def _problems(e: Exception) -> str:
@@ -96,27 +122,30 @@ class LLM:
             if not settings.google_api_key:
                 raise LLMError("no Google API key configured")
             self._client = genai.Client(api_key=settings.google_api_key)
-        try:
-            response = self._client.models.generate_content(
-                model=self.model,
-                contents=[
-                    # Gemini calls the assistant turn "model"
-                    {
-                        "role": "model" if m["role"] == "assistant" else "user",
-                        "parts": [{"text": m["content"]}],
-                    }
-                    for m in messages
-                ],
-                config=genai_types.GenerateContentConfig(
-                    system_instruction=system,
-                    response_mime_type="application/json",
-                    max_output_tokens=32000,
-                ),
-            )
-        except genai_errors.APIError as e:
-            # ponytail: no retry here, so a free-tier 429 fails the call. The orchestrator
-            # retries each agent once; add backoff if rate limits bite.
-            raise LLMError(f"model call failed: {type(e).__name__} {e.code}") from None
+        contents = [
+            # Gemini calls the assistant turn "model"
+            {
+                "role": "model" if m["role"] == "assistant" else "user",
+                "parts": [{"text": m["content"]}],
+            }
+            for m in messages
+        ]
+        config = genai_types.GenerateContentConfig(
+            system_instruction=system,
+            response_mime_type="application/json",
+            max_output_tokens=32000,
+        )
+        for attempt in range(1, GOOGLE_ATTEMPTS + 1):
+            try:
+                response = self._client.models.generate_content(
+                    model=self.model, contents=contents, config=config
+                )
+                break
+            except genai_errors.APIError as e:
+                # 429 = rate limit (the free tier allows a few requests a minute), 503 = busy
+                if e.code not in (429, 503) or attempt == GOOGLE_ATTEMPTS:
+                    raise LLMError(f"model call failed: {type(e).__name__} {e.code}") from None
+                time.sleep(_retry_delay(e, attempt))
         reason = response.candidates[0].finish_reason if response.candidates else None
         if reason is None or reason.name != "STOP":
             raise LLMError(f"model stopped early: {reason.name if reason else 'no candidates'}")

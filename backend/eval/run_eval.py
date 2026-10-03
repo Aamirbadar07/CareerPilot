@@ -21,7 +21,6 @@ from app.agents.fit_scorer.agent import score_job
 from app.agents.job_discovery.schema import Job
 from app.agents.resume_tailor.agent import fabrications, validate
 from app.agents.resume_tailor.schema import TailoredResume
-from app.core.config import settings
 from app.core.llm import LLM, LLMError
 
 HERE = Path(__file__).parent
@@ -130,16 +129,17 @@ def main() -> None:
         print(
             f"   calls: {llm.usage['calls']}, median latency per agent call: {statistics.median(timings):.1f}s"
         )
-    price_in, price_out = PRICES.get(settings.anthropic_model, (0.0, 0.0))
-    cost = llm.usage["input_tokens"] / 1e6 * price_in + llm.usage["output_tokens"] / 1e6 * price_out
-    print(
-        f"   tokens: {llm.usage['input_tokens']} in, {llm.usage['output_tokens']} out on {settings.anthropic_model}"
-    )
-    print(
-        f"   cost of this evaluation: ${cost:.2f}"
-        if price_in
-        else "   no price listed for this model"
-    )
+    tokens = f"{llm.usage['input_tokens']} in, {llm.usage['output_tokens']} out"
+    print(f"   tokens: {tokens} on {llm.model}")
+    if llm.model in PRICES:
+        price_in, price_out = PRICES[llm.model]
+        cost = (
+            llm.usage["input_tokens"] / 1e6 * price_in
+            + llm.usage["output_tokens"] / 1e6 * price_out
+        )
+        print(f"   cost of this evaluation: ${cost:.2f}")
+    else:
+        print("   no price listed for this model in PRICES; cost not computed")
 
 
 if __name__ == "__main__":
