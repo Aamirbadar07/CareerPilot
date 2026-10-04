@@ -22,7 +22,9 @@ Expired profiles are purged whenever a new resume is uploaded.
 - Every later agent receives the profile with the email address and phone number removed.
 - LinkedIn text and certificate text you paste or upload are sent to the model as given.
 
-The model provider is Anthropic. Their API terms govern what they retain.
+The deployed service sends them to Google's Gemini API, so Google's API terms govern what
+is retained. The app can also run on Anthropic's API (`LLM_PROVIDER=anthropic`): a copy you
+host yourself sends them to whichever provider its key belongs to.
 
 ## What is never done
 
