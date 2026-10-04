@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app import services
 from app.agents.resume_tailor.agent import untailored
-from app.api.deps import get_llm, get_profile
+from app.api.deps import get_llm, get_own_profile, get_profile
 from app.core import render
 from app.core.llm import LLM
 from app.core.rate_limit import rate_limit
@@ -16,7 +16,7 @@ router = APIRouter(prefix="/api/profiles/{profile_id}/jobs/{job_id}/tailor")
 @router.post("", dependencies=[Depends(rate_limit(20, 3600))])
 def tailor(
     job_id: str,
-    profile: MasterProfile = Depends(get_profile),
+    profile: MasterProfile = Depends(get_own_profile),
     db: Session = Depends(get_db),
     llm: LLM = Depends(get_llm),
 ):
