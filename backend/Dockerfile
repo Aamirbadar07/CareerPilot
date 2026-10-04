@@ -13,6 +13,7 @@ RUN uv sync --frozen --no-dev
 COPY . .
 ENV PATH="/app/.venv/bin:$PATH"
 
-# --proxy-headers: behind Render's proxy the client IP arrives in X-Forwarded-For, and the
-# per-IP rate limit needs the real one.
-CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --proxy-headers --forwarded-allow-ips='*'"]
+# No --proxy-headers: it would rewrite the client address from the *first* X-Forwarded-For
+# entry, which the caller writes. The rate limit reads the header itself, from the right
+# (app/core/rate_limit.py, TRUSTED_PROXY_HOPS).
+CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
