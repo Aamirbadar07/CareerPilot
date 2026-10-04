@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { BandBadge, ScoreRing } from "@/components/score-ring";
 import { Card, ComponentBars, Loading, Notice, PageHeader, SkillChips } from "@/components/ui/bits";
 import { Button } from "@/components/ui/button";
-import { api, useApi, useProfileId } from "@/lib/api";
+import { api, SAMPLE, useApi, useProfileId } from "@/lib/api";
 import type { Job } from "@/lib/types";
 
 export default function JobPage({ params }: { params: { id: string } }) {
@@ -15,6 +15,9 @@ export default function JobPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const { data: job, loading, error, reload } = useApi<Job>(id && `/api/profiles/${id}/jobs/${params.id}`);
   const [busy, setBusy] = useState<"tailor" | "score" | null>(null);
+  // The sample profile is shared by every visitor, so the server refuses to spend model
+  // calls on it. Its jobs arrive already scored and tailored.
+  const own = id !== null && id !== SAMPLE;
 
   async function tailor() {
     setBusy("tailor");
@@ -55,9 +58,17 @@ export default function JobPage({ params }: { params: { id: string } }) {
     <>
       <PageHeader title={job.title} lead={[job.company, job.location, job.employment_type].filter(Boolean).join(", ")}>
         <div className="flex flex-wrap gap-3">
-          <Button onClick={tailor} disabled={busy !== null}>
-            {busy === "tailor" ? "Tailoring" : "Tailor my resume to this job"}
-          </Button>
+          {own ? (
+            <Button onClick={tailor} disabled={busy !== null}>
+              {busy === "tailor" ? "Tailoring" : "Tailor my resume to this job"}
+            </Button>
+          ) : (
+            job.tailored && (
+              <Button asChild>
+                <Link href={`/tailor/${params.id}`}>See the tailored resume</Link>
+              </Button>
+            )
+          )}
           <Button asChild variant="secondary">
             <a href={job.url} target="_blank" rel="noreferrer">
               Open the posting on {job.source}
@@ -70,9 +81,11 @@ export default function JobPage({ params }: { params: { id: string } }) {
         <Notice
           title="Not scored against your current profile"
           action={
-            <Button onClick={score} disabled={busy !== null}>
-              {busy === "score" ? "Scoring" : "Score this job"}
-            </Button>
+            own && (
+              <Button onClick={score} disabled={busy !== null}>
+                {busy === "score" ? "Scoring" : "Score this job"}
+              </Button>
+            )
           }
         >
           Your profile changed, or this job was never scored.

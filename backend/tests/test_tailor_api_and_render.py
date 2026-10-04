@@ -42,7 +42,7 @@ def test_unknown_ids_are_not_rendered():
     assert "Experience</h2>" not in render.render_html(PROFILE, TailoredResume(**data))
 
 
-def test_tailor_endpoints(client, db):
+def test_tailor_endpoints(client, db, mine):
     sample.seed(db)
     stored = client.get(BASE).json()
     assert stored["result"]["status"] == "tailored"
@@ -50,13 +50,23 @@ def test_tailor_endpoints(client, db):
     assert "Lumen" not in client.get(f"{BASE}/html").text  # the resume, not the job
     assert "Asha Verma" in client.get(f"{BASE}/html").text
 
+    own = f"/api/profiles/{mine}/jobs/{JOB_ID}/tailor"
     client.llm = fake_llm(json.dumps(SAMPLE["resume"]), json.dumps(SAMPLE["validation"]))
-    r = client.post(BASE)  # the fit report is seeded, so only tailor and validator are called
+    r = client.post(own)  # the fit report is seeded, so only tailor and validator are called
     assert r.status_code == 200 and r.json()["result"]["attempts"] == 1
 
-    assert client.post("/api/profiles/sample/jobs/nope/tailor").status_code == 404
+    assert client.post(f"/api/profiles/{mine}/jobs/nope/tailor").status_code == 404
     expected = 200 if pdf_available() else 501
     assert client.get(f"{BASE}/pdf").status_code == expected
+
+
+def test_tailoring_the_shared_sample_is_refused(client, db):
+    """Every visitor sees the sample profile, so tailoring it would spend model calls on
+    shared state. The seeded result stays readable."""
+    sample.seed(db)
+    client.llm = None  # a model call would raise, so the refusal has to come first
+    assert client.post(BASE).status_code == 403
+    assert client.get(BASE).json()["result"]["status"] == "tailored"
 
 
 @needs_pdf

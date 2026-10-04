@@ -51,7 +51,7 @@ class FitRequest(BaseModel):
 @router.post("/fit", dependencies=[Depends(rate_limit(20, 3600))])
 def fit(
     body: FitRequest,
-    profile: MasterProfile = Depends(get_profile),
+    profile: MasterProfile = Depends(get_own_profile),
     db: Session = Depends(get_db),
     llm: LLM = Depends(get_llm),
 ):
@@ -79,4 +79,8 @@ def read_job(
     job_id: str, profile: MasterProfile = Depends(get_profile), db: Session = Depends(get_db)
 ):
     job = services.get_job(db, profile, job_id)
-    return job.model_dump() | {"fit": services.current_fits(db, profile).get(job_id)}
+    return job.model_dump() | {
+        "fit": services.current_fits(db, profile).get(job_id),
+        # whether there is a tailored resume to link to, as the list endpoint also reports
+        "tailored": services.current(db, profile, "tailored_resume", job_id) is not None,
+    }
