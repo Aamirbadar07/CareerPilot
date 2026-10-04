@@ -114,7 +114,9 @@ Identical inputs are served from the content-hash cache and cost nothing.
 
 | Check | Result | Date |
 |---|---|---|
-| Backend unit tests | 113 passed, 2 skipped (PDF tests, no Pango on the dev machine) | 2026-10-03 |
+| Backend unit tests | 121 passed, 2 skipped (PDF tests, no Pango on the dev machine) | 2026-10-04 |
+| PDF download from the deployed backend: a tailored sample resume | 21 KB, `%PDF-1.7`, 5.9 s | 2026-10-04 |
+| Per-IP rate limit against the deployed backend: 30 requests, then a changed `X-Forwarded-For` | 429 as expected, but a new header value reset the budget. Fixed, and now covered by `tests/test_rate_limit.py` | 2026-10-04 |
 | Profile round-trip on PostgreSQL 16.2 (embedded, via `pgserver`) | Passed; `data` column is `jsonb` | 2026-10-03 |
 | Job sources live: Remotive and two Greenhouse boards, sample queries, no LLM | 33 relevant postings fetched, 12 kept after the code prefilter | 2026-10-03 |
 | Lighthouse, production build, mobile emulation: landing, dashboard, jobs | Performance 92, 91, 93. Accessibility 100, 100, 100 | 2026-10-03 |
@@ -127,9 +129,9 @@ Identical inputs are served from the content-hash cache and cost nothing.
   coach agents have not. Nothing has run on Claude, the model the prompts were written for.
 - The Gemini free tier is tight: `gemini-3.8-flash` ran out of daily quota during the first
   attempt, so the default Gemini model has not completed an evaluation.
-- PDF rendering. WeasyPrint needs Pango, which is not on the Windows dev machine. The two
-  PDF tests run in CI and in the Docker image; neither has been run yet.
-- The Docker image has not been built and nothing is deployed.
+- PDF rendering on the Windows dev machine. WeasyPrint needs Pango, which is not installed
+  there, so the two PDF tests skip locally. They run in CI, and the deployed backend serves
+  a real PDF (above), so the renderer itself is no longer unverified.
 - JSearch. Its adapter is written from the documented response shape and tested against a
   fixture, but has not been called with a real key.
 - "20+ deduped real jobs": the live check kept 12 from keyless sources alone.

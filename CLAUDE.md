@@ -11,7 +11,7 @@ on skill gaps.
 - Queue: in-process background tasks for MVP; Celery + Redis later
 - PDF: Jinja2 HTML template rendered by WeasyPrint
 - Frontend: Next.js 14 App Router, TypeScript, Tailwind, shadcn/ui, Motion
-- Deploy: frontend on Vercel, backend on Render
+- Deploy: frontend on Vercel, backend on Cloud Run (`render.yaml` also builds the same image)
 
 ## Repo layout
 

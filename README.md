@@ -20,10 +20,11 @@ Two rules shape everything:
 
 ## Status
 
-Built and tested against hand-authored fixtures. **Only the fact-checker and the fit scorer
-have run against a real model (Gemini Flash-Lite), the PDF renderer has not been run, and
-nothing is deployed.**
-[`docs/evaluation.md`](docs/evaluation.md) lists what was measured and what was not.
+Deployed: the frontend on Vercel, the backend on Cloud Run, and the PDF renderer works
+there (a tailored resume downloads as a one-page PDF). The agents are still mostly
+unmeasured: **only the fact-checker and the fit scorer have run against a real model
+(Gemini Flash-Lite), and nothing has run on Claude, the model the prompts were written
+for.** [`docs/evaluation.md`](docs/evaluation.md) lists what was measured and what was not.
 
 ## How it works
 
@@ -96,6 +97,7 @@ coaching plan. Uploading your own resume needs the key.
 | `RAPIDAPI_KEY` | JSearch job source | source skipped |
 | `GREENHOUSE_BOARDS` | which company boards to read | `gitlab` |
 | `FRONTEND_ORIGIN` | CORS | `http://localhost:3000` |
+| `TRUSTED_PROXY_HOPS` | proxies in front of the app, so the per-IP rate limit reads a real address and not one a caller typed | `1` |
 | `NEXT_PUBLIC_API_URL` (frontend) | where the API is | `http://localhost:8000` |
 
 Local Postgres instead of SQLite: `docker compose up -d db`, then
@@ -115,10 +117,14 @@ cd frontend && npm test && npm run lint && npm run typecheck
 
 ## Deploy
 
-- **Backend on Render:** `render.yaml` is a blueprint that builds `backend/Dockerfile`. Set
-  `ANTHROPIC_API_KEY`, `DATABASE_URL` and `FRONTEND_ORIGIN` in the dashboard.
+- **Backend on Cloud Run** (what the live API runs on): build `backend/Dockerfile` and
+  deploy it, with `ANTHROPIC_API_KEY` (or `GOOGLE_API_KEY` and `LLM_PROVIDER=google`),
+  `DATABASE_URL` and `FRONTEND_ORIGIN` set on the service. One proxy sits in front, so the
+  default `TRUSTED_PROXY_HOPS=1` is right; add one for each extra load balancer or CDN.
+- **Backend on Render:** `render.yaml` is a blueprint that builds the same image. Set the
+  same variables in the dashboard.
 - **Frontend on Vercel:** import the repo, set the root directory to `frontend` and
-  `NEXT_PUBLIC_API_URL` to the Render URL.
+  `NEXT_PUBLIC_API_URL` to the backend URL.
 
 ## Decisions
 
