@@ -135,7 +135,7 @@ class LLM:
         later = self.models[self.models.index(self.model) + 1 :]
         if not later:
             return False
-        log.warning("%s is out of quota, falling back to %s", self.model, later[0])
+        log.warning("%s cannot be used, falling back to %s", self.model, later[0])
         self.model = later[0]
         return True
 
@@ -164,6 +164,11 @@ class LLM:
                 )
                 break
             except genai_errors.APIError as e:
+                # A name this key cannot use is worth skipping rather than failing on: the
+                # chain is written by hand and one wrong id would otherwise stop every call
+                # from that point on.
+                if e.code == 404 and self._next_model():
+                    continue
                 # 429 = rate limit (the free tier allows a few requests a minute), 503 = busy
                 if e.code not in (429, 503) or attempt == GOOGLE_ATTEMPTS:
                     raise LLMError(f"model call failed: {type(e).__name__} {e.code}") from None

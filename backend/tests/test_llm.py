@@ -206,3 +206,40 @@ def test_google_reports_the_quota_error_when_no_model_is_left(monkeypatch):
     client = NS(models=NS(generate_content=generate_content))
     with pytest.raises(LLMError, match="daily quota used up"):
         llm_module.LLM(client=client).complete("sys", "x", Out)
+
+
+def test_google_skips_a_model_name_the_key_cannot_use(monkeypatch):
+    """The chain is typed by hand, so one wrong id must not stop every call after it."""
+    from types import SimpleNamespace as NS
+
+    from app.core import llm as llm_module
+
+    monkeypatch.setattr(llm_module.settings, "llm_provider", "google")
+    monkeypatch.setattr(llm_module.settings, "google_model", "gemini-typo,gemini-real")
+    monkeypatch.setattr(llm_module.time, "sleep", lambda s: pytest.fail("must not wait"))
+    missing = llm_module.genai_errors.ClientError(404, {"error": {"message": "model not found"}})
+    ok = NS(
+        text=GOOD,
+        candidates=[NS(finish_reason=NS(name="STOP"))],
+        usage_metadata=NS(prompt_token_count=1, candidates_token_count=1, thoughts_token_count=0),
+    )
+
+    def generate_content(**kwargs):
+        if kwargs["model"] == "gemini-typo":
+            raise missing
+        return ok
+
+    llm = llm_module.LLM(client=NS(models=NS(generate_content=generate_content)))
+    assert llm.complete("sys", "x", Out) == Out(name="a", n=1)
+    assert llm.model == "gemini-real"
+
+
+def test_an_empty_google_model_falls_back_to_the_default(monkeypatch):
+    """A variable left blank in a hosting dashboard used to leave the client with no model
+    at all, and every call raised IndexError."""
+    from app.core import llm as llm_module
+    from app.core.config import Settings
+
+    monkeypatch.setattr(llm_module.settings, "llm_provider", "google")
+    monkeypatch.setattr(llm_module.settings, "google_model", "   ")
+    assert llm_module.LLM().model == Settings.model_fields["google_model"].default

@@ -27,7 +27,11 @@ class Settings(BaseSettings):
 
     @property
     def google_models(self) -> list[str]:
-        return [m.strip() for m in self.google_model.split(",") if m.strip()]
+        """GOOGLE_MODEL as a list. An empty or blank value falls back to the default rather
+        than to no model at all: a variable left empty in a hosting dashboard is the normal
+        way this happens."""
+        names = [m.strip() for m in self.google_model.split(",") if m.strip()]
+        return names or [type(self).model_fields["google_model"].default]
 
     @property
     def db_url(self) -> str:
