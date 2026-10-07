@@ -155,3 +155,54 @@ def test_google_daily_quota_fails_at_once_instead_of_retrying(monkeypatch):
     with pytest.raises(LLMError, match="daily quota used up.*6.8 h"):
         llm_module.LLM(client=client).complete("sys", "x", Out)
     assert len(calls) == 1
+
+
+def test_google_falls_back_to_the_next_model_when_one_runs_out_of_quota(monkeypatch):
+    """Gemini counts free-tier quota per model, so a second configured model still has its
+    own when the first is spent for the day."""
+    from types import SimpleNamespace as NS
+
+    from app.core import llm as llm_module
+
+    monkeypatch.setattr(llm_module.settings, "llm_provider", "google")
+    monkeypatch.setattr(llm_module.settings, "google_model", "gemini-3-flash, gemini-2.5-flash")
+    monkeypatch.setattr(llm_module.time, "sleep", lambda s: pytest.fail("must not wait"))
+    spent = llm_module.genai_errors.ClientError(
+        429, {"error": {"message": "You exceeded your current quota. Please retry in 24337.5s."}}
+    )
+    ok = NS(
+        text=GOOD,
+        candidates=[NS(finish_reason=NS(name="STOP"))],
+        usage_metadata=NS(prompt_token_count=1, candidates_token_count=1, thoughts_token_count=0),
+    )
+    asked = []
+
+    def generate_content(**kwargs):
+        asked.append(kwargs["model"])
+        if kwargs["model"] == "gemini-3-flash":
+            raise spent
+        return ok
+
+    llm = llm_module.LLM(client=NS(models=NS(generate_content=generate_content)))
+    assert llm.complete("sys", "x", Out) == Out(name="a", n=1)
+    assert asked == ["gemini-3-flash", "gemini-2.5-flash"]  # switched without waiting
+    assert llm.model == "gemini-2.5-flash"  # and stays there for the rest of the process
+
+
+def test_google_reports_the_quota_error_when_no_model_is_left(monkeypatch):
+    from types import SimpleNamespace as NS
+
+    from app.core import llm as llm_module
+
+    monkeypatch.setattr(llm_module.settings, "llm_provider", "google")
+    monkeypatch.setattr(llm_module.settings, "google_model", "only-model")
+    spent = llm_module.genai_errors.ClientError(
+        429, {"error": {"message": "You exceeded your current quota. Please retry in 24337.5s."}}
+    )
+
+    def generate_content(**kwargs):
+        raise spent
+
+    client = NS(models=NS(generate_content=generate_content))
+    with pytest.raises(LLMError, match="daily quota used up"):
+        llm_module.LLM(client=client).complete("sys", "x", Out)

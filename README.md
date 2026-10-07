@@ -92,7 +92,7 @@ coaching plan. Uploading your own resume needs the key.
 | `ANTHROPIC_API_KEY` | every agent, when the provider is `anthropic` | none |
 | `ANTHROPIC_MODEL` | model choice | `claude-sonnet-4-6` |
 | `GOOGLE_API_KEY` | every agent, when the provider is `google` (a Gemini key from Google AI Studio) | none |
-| `GOOGLE_MODEL` | model choice | `gemini-3.8-flash` |
+| `GOOGLE_MODEL` | model choice; several separated by commas are tried in order as each runs out of quota | `gemini-3.8-flash` |
 | `DATABASE_URL` | Postgres (Supabase) | a local SQLite file |
 | `RAPIDAPI_KEY` | JSearch job source | source skipped |
 | `GREENHOUSE_BOARDS` | which company boards to read | `gitlab` |
