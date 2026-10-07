@@ -1,5 +1,6 @@
 import hashlib
 import json
+import logging
 import re
 import threading
 import time
@@ -14,12 +15,20 @@ from pydantic import BaseModel, ValidationError
 
 from app.core.config import settings
 
+log = logging.getLogger("careerpilot.llm")
+
 T = TypeVar("T", bound=BaseModel)
 
 
 class LLMError(RuntimeError):
     """Raised when the model cannot produce valid output. Never carries prompt or response
     text, because those hold resume content (CLAUDE.md rule 6)."""
+
+
+class QuotaExhausted(LLMError):
+    """This model has no quota left for now. Gemini counts quota per model, so another
+    configured model may still answer; when none is left this surfaces as the LLMError it
+    is."""
 
 
 class Cache(Protocol):
@@ -57,7 +66,7 @@ def _retry_delay(e: Exception, attempt: int) -> float:
         return min(60.0, 2.0**attempt)
     seconds = float(asked.group(1) or asked.group(2))
     if seconds > 120:
-        raise LLMError(
+        raise QuotaExhausted(
             f"Gemini daily quota used up for this model; resets in {seconds / 3600:.1f} h"
         )
     return seconds + 1
@@ -80,7 +89,10 @@ class LLM:
         self.cache = cache
         self.provider = settings.llm_provider
         google = self.provider == "google"
-        self.model = settings.google_model if google else settings.anthropic_model
+        # Several models may be configured for Google; they are tried in order as each one
+        # runs out of quota. `model` is whichever is in use now, and goes into the cache key.
+        self.models = settings.google_models if google else [settings.anthropic_model]
+        self.model = self.models[0]
         # Token totals for cost reporting (eval/run_eval.py). Fit scoring calls from threads.
         self.usage = {"calls": 0, "input_tokens": 0, "output_tokens": 0}
         self._usage_lock = threading.Lock()
@@ -117,6 +129,16 @@ class LLM:
         text = "".join(block.text for block in message.content if block.type == "text")
         return text, message.usage.input_tokens, message.usage.output_tokens
 
+    def _next_model(self) -> bool:
+        """Switch to the next configured model, if there is one. The switch sticks: a model
+        that is out of quota for the day will not come back during this process."""
+        later = self.models[self.models.index(self.model) + 1 :]
+        if not later:
+            return False
+        log.warning("%s is out of quota, falling back to %s", self.model, later[0])
+        self.model = later[0]
+        return True
+
     def _google(self, system: str, messages: list[dict]) -> tuple[str, int, int]:
         if self._client is None:
             if not settings.google_api_key:
@@ -145,7 +167,13 @@ class LLM:
                 # 429 = rate limit (the free tier allows a few requests a minute), 503 = busy
                 if e.code not in (429, 503) or attempt == GOOGLE_ATTEMPTS:
                     raise LLMError(f"model call failed: {type(e).__name__} {e.code}") from None
-                time.sleep(_retry_delay(e, attempt))
+                try:
+                    delay = _retry_delay(e, attempt)
+                except QuotaExhausted:
+                    if not self._next_model():
+                        raise
+                    continue  # the next model has its own quota, so try it straight away
+                time.sleep(delay)
         reason = response.candidates[0].finish_reason if response.candidates else None
         if reason is None or reason.name != "STOP":
             raise LLMError(f"model stopped early: {reason.name if reason else 'no candidates'}")
