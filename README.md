@@ -126,6 +126,11 @@ cd frontend && npm test && npm run lint && npm run typecheck
 - **Frontend on Vercel:** import the repo, set the root directory to `frontend` and
   `NEXT_PUBLIC_API_URL` to the backend URL.
 
+`GET /health` answers 200 whenever the process is alive, and its body says whether the
+database answers: `{"status":"ok"}` or `{"status":"degraded","database":"unreachable (...)"}`.
+It never returns an error code, because a platform restarts a container whose health check
+fails and a restart cannot fix a database outage. Read the body, not the status code.
+
 ## Decisions
 
 - [0001 Licensed job APIs and pasted text, no scraping](docs/decisions/0001-licensed-apis-not-scraping.md)
