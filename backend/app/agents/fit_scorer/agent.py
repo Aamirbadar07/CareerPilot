@@ -5,10 +5,12 @@ from app.agents.fit_scorer.prompt import SYSTEM_PROMPT
 from app.agents.fit_scorer.schema import MUST_HAVE_CAP, WEIGHTS, FitReport, band_for
 from app.agents.job_discovery.schema import Job
 from app.agents.resume_analyzer.schema import profile_ids
+from app.core.config import settings
 from app.core.llm import LLM, LLMError
 from app.schemas.profile import MasterProfile
 
 MAX_CONCURRENT = 10  # the orchestrator's limit for this agent
+FREE_TIER_CONCURRENT = 4  # Gemini's free tier allows about five requests a minute per model
 # "70% of the must-haves" is fine; "70% chance" and "odds of getting hired" are not
 _PROBABILITY = re.compile(
     r"\d\s?%\s*(chance|probability|likelihood|odds)"
@@ -73,9 +75,16 @@ def score_job(llm: LLM, profile: MasterProfile, job: Job) -> FitReport:
     return report
 
 
+def max_concurrent() -> int:
+    """How many jobs to score at once. Ten against Gemini's free tier means every batch is
+    throttled on arrival and each retry then sleeps through the server's backoff, which is
+    slower than sending fewer. Anthropic has no such ceiling at this scale."""
+    return FREE_TIER_CONCURRENT if settings.llm_provider == "google" else MAX_CONCURRENT
+
+
 def score_jobs(llm: LLM, profile: MasterProfile, jobs: list[Job]) -> dict[str, FitReport | None]:
-    """Score every job, at most MAX_CONCURRENT at a time. A job that fails is returned as
-    None; one bad posting never blocks the rest."""
+    """Score every job, a few at a time (see max_concurrent). A job that fails is returned
+    as None; one bad posting never blocks the rest."""
 
     def one(job: Job) -> FitReport | None:
         try:
@@ -83,5 +92,5 @@ def score_jobs(llm: LLM, profile: MasterProfile, jobs: list[Job]) -> dict[str, F
         except LLMError:
             return None
 
-    with ThreadPoolExecutor(max_workers=MAX_CONCURRENT) as pool:
+    with ThreadPoolExecutor(max_workers=max_concurrent()) as pool:
         return dict(zip((j.id for j in jobs), pool.map(one, jobs), strict=True))
