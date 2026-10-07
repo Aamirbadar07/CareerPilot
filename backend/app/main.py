@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from sqlalchemy.exc import SQLAlchemyError
 
 from app import sample
 from app.api import advice, credentials, health, jobs, profiles, runs, tailor
@@ -16,8 +17,15 @@ from app.db.session import SessionLocal
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     setup_logging()
-    with SessionLocal() as db:
-        sample.seed(db)
+    try:
+        with SessionLocal() as db:
+            sample.seed(db)
+    except SQLAlchemyError as e:
+        # A database that is down must not stop the app from starting. It still answers
+        # /health, which is where the reason shows up; seeding runs again on the next start.
+        logging.getLogger("careerpilot").error(
+            "demo data not seeded, the database did not answer: %s", type(e).__name__
+        )
     yield
 
 
