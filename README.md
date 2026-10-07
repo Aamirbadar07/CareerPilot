@@ -117,14 +117,19 @@ cd frontend && npm test && npm run lint && npm run typecheck
 
 ## Deploy
 
-- **Backend on Cloud Run** (what the live API runs on): build `backend/Dockerfile` and
-  deploy it, with `ANTHROPIC_API_KEY` (or `GOOGLE_API_KEY` and `LLM_PROVIDER=google`),
-  `DATABASE_URL` and `FRONTEND_ORIGIN` set on the service. One proxy sits in front, so the
-  default `TRUSTED_PROXY_HOPS=1` is right; add one for each extra load balancer or CDN.
-- **Backend on Render:** `render.yaml` is a blueprint that builds the same image. Set the
-  same variables in the dashboard.
+- **Backend on Render** (no card needed): `render.yaml` is a blueprint for a free instance.
+  In Render, pick **New + → Blueprint**, choose this repository, and fill in the variables
+  it asks for: `GOOGLE_API_KEY`, `GOOGLE_MODEL`, `DATABASE_URL` and `FRONTEND_ORIGIN`
+  (leave `ANTHROPIC_API_KEY` and `RAPIDAPI_KEY` blank unless you have them). For
+  `DATABASE_URL` use Supabase's **session pooler** string: the direct `db.<ref>.supabase.co`
+  host resolves to IPv6 only, which Render cannot reach. A free instance sleeps after about
+  15 minutes idle and takes up to a minute to wake.
+- **Backend on Cloud Run:** build `backend/Dockerfile` and deploy it with the same
+  variables. Note that Cloud Run runs nothing on a project whose billing is disabled, even
+  within the always-free allowance.
 - **Frontend on Vercel:** import the repo, set the root directory to `frontend` and
-  `NEXT_PUBLIC_API_URL` to the backend URL.
+  `NEXT_PUBLIC_API_URL` to the backend URL. Set `FRONTEND_ORIGIN` on the backend to the
+  Vercel URL in return: it is the only origin CORS allows.
 
 ## Decisions
 

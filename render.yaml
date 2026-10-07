@@ -3,14 +3,35 @@ services:
   - type: web
     name: careerpilot-api
     runtime: docker
+    # Free instances sleep after about 15 minutes idle and take up to a minute to wake, so
+    # the first visitor after a quiet spell waits. No card, which is the point.
+    plan: free
+    # Closest free region to the Supabase project in ap-south-1; delete this line to take
+    # Render's default (Oregon), which adds a few hundred milliseconds to every query.
+    region: singapore
     rootDir: backend
+    # /health answers 200 whenever the process is alive and reports the database in its
+    # body, so Render never restarts the service over an outage it cannot fix.
     healthCheckPath: /health
     envVars:
+      - key: LLM_PROVIDER
+        value: google
+      # Entered in the dashboard. GOOGLE_MODEL takes a comma-separated list: Gemini counts
+      # free-tier quota per model, so the next one is used when the one before runs out.
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: GOOGLE_MODEL
+        sync: false
       - key: ANTHROPIC_API_KEY
         sync: false
+      # Use the Supabase *session pooler* string, not db.<ref>.supabase.co: the direct host
+      # resolves to IPv6 only and Render's outbound traffic is IPv4.
       - key: DATABASE_URL
         sync: false
       - key: RAPIDAPI_KEY
         sync: false
       - key: FRONTEND_ORIGIN
         sync: false
+      # One proxy in front of the app, so the rate limit reads the address Render appends.
+      - key: TRUSTED_PROXY_HOPS
+        value: "1"
