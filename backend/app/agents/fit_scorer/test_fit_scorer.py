@@ -113,3 +113,15 @@ def test_one_failing_job_does_not_block_the_batch():
 )
 def test_band_boundaries(score, band):
     assert band_for(score) == band
+
+
+def test_fewer_jobs_are_scored_at_once_on_the_google_free_tier(monkeypatch):
+    """Ten at once against a five-a-minute limit is throttled on arrival, and every retry
+    then waits out the server's backoff."""
+    from app.agents.fit_scorer import agent as fit
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "llm_provider", "google")
+    assert fit.max_concurrent() == fit.FREE_TIER_CONCURRENT
+    monkeypatch.setattr(settings, "llm_provider", "anthropic")
+    assert fit.max_concurrent() == fit.MAX_CONCURRENT
