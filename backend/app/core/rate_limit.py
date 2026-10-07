@@ -16,7 +16,11 @@ def client_key(request: Request) -> str:
     limit with a made-up header. A header too short to hold the expected hops is ignored
     entirely in favour of the socket address, which no caller can choose.
     """
-    forwarded = [part.strip() for part in request.headers.get("x-forwarded-for", "").split(",")]
+    # getlist, not get: X-Forwarded-For may arrive as several header lines, and a proxy that
+    # adds its own line rather than appending to the caller's would otherwise be invisible -
+    # `get` returns the first line only, which is the one the caller wrote.
+    chain = ",".join(request.headers.getlist("x-forwarded-for"))
+    forwarded = [part.strip() for part in chain.split(",")]
     forwarded = [part for part in forwarded if part]
     hops = settings.trusted_proxy_hops
     if hops and len(forwarded) >= hops:

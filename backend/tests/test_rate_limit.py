@@ -48,3 +48,17 @@ def test_a_header_too_short_for_the_configured_hops_is_ignored(limited, monkeypa
     monkeypatch.setattr(settings, "trusted_proxy_hops", 2)
     assert codes(limited, 3, **{"X-Forwarded-For": "203.0.113.9"}) == [200, 200, 429]
     assert codes(limited, 1, **{"X-Forwarded-For": "198.51.100.7"}) == [429]
+
+
+def test_every_x_forwarded_for_line_is_read(limited, monkeypatch):
+    """A proxy may add its own X-Forwarded-For line instead of appending to the caller's.
+    Reading only the first line means reading only what the caller wrote."""
+    monkeypatch.setattr(settings, "trusted_proxy_hops", 1)
+    real = "198.51.100.7"
+    # starlette joins repeated headers in order, so two lines look like one chain
+    sent = [("x-forwarded-for", "forged-by-the-caller"), ("x-forwarded-for", real)]
+    codes = [limited.get("/x", headers=sent).status_code for _ in range(3)]
+    assert codes == [200, 200, 429]
+    # a different forgery in front of the same appended address is the same caller
+    other = [("x-forwarded-for", "another-forgery"), ("x-forwarded-for", real)]
+    assert limited.get("/x", headers=other).status_code == 429
