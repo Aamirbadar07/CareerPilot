@@ -243,3 +243,41 @@ def test_an_empty_google_model_falls_back_to_the_default(monkeypatch):
     monkeypatch.setattr(llm_module.settings, "llm_provider", "google")
     monkeypatch.setattr(llm_module.settings, "google_model", "   ")
     assert llm_module.LLM().model == Settings.model_fields["google_model"].default
+
+
+def test_multiple_google_api_keys_parsing_and_rotation(monkeypatch):
+    """Users can paste multiple comma-separated keys; the system rotates between them
+    when rate-limited or out of quota."""
+    from types import SimpleNamespace as NS
+
+    from app.core import llm as llm_module
+
+    monkeypatch.setattr(llm_module.settings, "llm_provider", "google")
+    monkeypatch.setattr(llm_module.settings, "google_api_key", "key-one, key-two ,key-three")
+    assert llm_module.settings.google_api_keys == ["key-one", "key-two", "key-three"]
+
+    created_clients = []
+    spent = llm_module.genai_errors.ClientError(
+        429, {"error": {"message": "You exceeded your current quota. Please retry in 24337.5s."}}
+    )
+    ok = NS(
+        text=GOOD,
+        candidates=[NS(finish_reason=NS(name="STOP"))],
+        usage_metadata=NS(prompt_token_count=1, candidates_token_count=1, thoughts_token_count=0),
+    )
+
+    def fake_factory(key):
+        def generate_content(**kwargs):
+            if key == "key-one":
+                raise spent
+            return ok
+
+        client = NS(api_key=key, models=NS(generate_content=generate_content))
+        created_clients.append(key)
+        return client
+
+    llm = llm_module.LLM(client_factory=fake_factory)
+    assert llm.complete("sys", "x", Out) == Out(name="a", n=1)
+    assert created_clients == ["key-one", "key-two"]
+    assert llm.google_key_index == 1
+

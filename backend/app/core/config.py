@@ -32,6 +32,31 @@ class Settings(BaseSettings):
         return origins or ["http://localhost:3000"]
 
     @property
+    def google_api_keys(self) -> list[str]:
+        """GOOGLE_API_KEY as a list, supporting comma-separated or newline-separated multiple keys
+        for key rotation across multiple Google accounts or projects."""
+        if not self.google_api_key:
+            return []
+        keys = [
+            k.strip()
+            for part in self.google_api_key.replace("\n", ",").split(",")
+            if (k := part.strip())
+        ]
+        return keys
+
+    @property
+    def anthropic_api_keys(self) -> list[str]:
+        """ANTHROPIC_API_KEY as a list, supporting comma-separated multiple keys."""
+        if not self.anthropic_api_key:
+            return []
+        keys = [
+            k.strip()
+            for part in self.anthropic_api_key.replace("\n", ",").split(",")
+            if (k := part.strip())
+        ]
+        return keys
+
+    @property
     def google_models(self) -> list[str]:
         """GOOGLE_MODEL as a list. An empty or blank value falls back to the default rather
         than to no model at all: a variable left empty in a hosting dashboard is the normal

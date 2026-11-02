@@ -84,8 +84,10 @@ class LLM:
     """One model behind every agent. LLM_PROVIDER picks Anthropic (the default the prompts
     were written for) or Google Gemini; everything above `_raw` is provider-neutral."""
 
-    def __init__(self, client=None, cache: Cache | None = None):
+    def __init__(self, client=None, cache: Cache | None = None, client_factory=None):
         self._client = client
+        self._custom_client = client is not None
+        self._client_factory = client_factory
         self.cache = cache
         self.provider = settings.llm_provider
         google = self.provider == "google"
@@ -93,6 +95,10 @@ class LLM:
         # runs out of quota. `model` is whichever is in use now, and goes into the cache key.
         self.models = settings.google_models if google else [settings.anthropic_model]
         self.model = self.models[0]
+        self.google_keys = settings.google_api_keys
+        self.google_key_index = 0
+        self.anthropic_keys = settings.anthropic_api_keys
+        self.anthropic_key_index = 0
         # Token totals for cost reporting (eval/run_eval.py). Fit scoring calls from threads.
         self.usage = {"calls": 0, "input_tokens": 0, "output_tokens": 0}
         self._usage_lock = threading.Lock()
@@ -109,8 +115,13 @@ class LLM:
     def _anthropic(self, system: str, messages: list[dict]) -> tuple[str, int, int]:
         if self._client is None:
             # api_key=None lets the SDK resolve credentials from the environment
+            api_key = (
+                self.anthropic_keys[self.anthropic_key_index]
+                if self.anthropic_keys
+                else (settings.anthropic_api_key or None)
+            )
             self._client = anthropic.Anthropic(
-                api_key=settings.anthropic_api_key or None, max_retries=3
+                api_key=api_key, max_retries=3
             )
         # streamed so long outputs (a full profile) cannot hit the HTTP timeout
         try:
@@ -129,6 +140,25 @@ class LLM:
         text = "".join(block.text for block in message.content if block.type == "text")
         return text, message.usage.input_tokens, message.usage.output_tokens
 
+    def _make_google_client(self, key: str):
+        if self._client_factory:
+            return self._client_factory(key)
+        return genai.Client(api_key=key)
+
+    def _next_google_key(self) -> bool:
+        """Switch to the next configured Google API key, if there is one."""
+        if self.google_key_index + 1 < len(self.google_keys):
+            self.google_key_index += 1
+            log.warning(
+                "Rotating to next Google API key (%d of %d)",
+                self.google_key_index + 1,
+                len(self.google_keys),
+            )
+            if not self._custom_client or self._client_factory:
+                self._client = self._make_google_client(self.google_keys[self.google_key_index])
+            return True
+        return False
+
     def _next_model(self) -> bool:
         """Switch to the next configured model, if there is one. The switch sticks: a model
         that is out of quota for the day will not come back during this process."""
@@ -137,13 +167,16 @@ class LLM:
             return False
         log.warning("%s cannot be used, falling back to %s", self.model, later[0])
         self.model = later[0]
+        if self.google_keys and (not self._custom_client or self._client_factory):
+            self.google_key_index = 0
+            self._client = self._make_google_client(self.google_keys[0])
         return True
 
     def _google(self, system: str, messages: list[dict]) -> tuple[str, int, int]:
         if self._client is None:
-            if not settings.google_api_key:
+            if not self.google_keys:
                 raise LLMError("no Google API key configured")
-            self._client = genai.Client(api_key=settings.google_api_key)
+            self._client = self._make_google_client(self.google_keys[self.google_key_index])
         contents = [
             # Gemini calls the assistant turn "model"
             {
@@ -169,15 +202,23 @@ class LLM:
                 # from that point on.
                 if e.code == 404 and self._next_model():
                     continue
+                # If an invalid key or permission issue occurs and another key is available, rotate
+                if e.code in (400, 403) and self._next_google_key():
+                    continue
                 # 429 = rate limit (the free tier allows a few requests a minute), 503 = busy
                 if e.code not in (429, 503) or attempt == GOOGLE_ATTEMPTS:
                     raise LLMError(f"model call failed: {type(e).__name__} {e.code}") from None
                 try:
                     delay = _retry_delay(e, attempt)
                 except QuotaExhausted:
+                    if self._next_google_key():
+                        continue  # next key has its own quota, try immediately
                     if not self._next_model():
                         raise
                     continue  # the next model has its own quota, so try it straight away
+                # If another key is available, try it before waiting on per-minute rate limit
+                if self._next_google_key():
+                    continue
                 time.sleep(delay)
         reason = response.candidates[0].finish_reason if response.candidates else None
         if reason is None or reason.name != "STOP":
