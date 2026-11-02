@@ -81,8 +81,13 @@ export default function ResumePage() {
               aria-label="Resume file"
             />
             <Button onClick={() => input.current?.click()} disabled={parsing}>
-              {parsing ? "Reading your resume" : "Choose a file"}
+              {parsing ? "Analyzing resume (~1-2 mins)..." : "Choose a file"}
             </Button>
+            {parsing && (
+              <p className="text-xs text-muted animate-pulse">
+                Extracting skills, calculating ATS score, and structuring profile with AI...
+              </p>
+            )}
           </div>
         </Card>
 
