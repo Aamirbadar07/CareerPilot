@@ -22,3 +22,4 @@ Write-Host "`nCareerPilot is live!" -ForegroundColor Green
 Write-Host "  - Frontend: http://localhost:3000"
 Write-Host "  - Backend:  http://127.0.0.1:8000"
 Write-Host "  - Health:   http://127.0.0.1:8000/health`n"
+

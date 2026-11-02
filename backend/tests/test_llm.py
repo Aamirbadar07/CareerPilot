@@ -241,7 +241,6 @@ def test_an_empty_google_model_falls_back_to_the_default(monkeypatch):
     """A variable left blank in a hosting dashboard used to leave the client with no model
     at all, and every call raised IndexError."""
     from app.core import llm as llm_module
-    from app.core.config import Settings
 
     monkeypatch.setattr(llm_module.settings, "llm_provider", "google")
     monkeypatch.setattr(llm_module.settings, "google_model", "   ")
