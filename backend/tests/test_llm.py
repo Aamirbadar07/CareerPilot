@@ -106,6 +106,7 @@ def test_google_provider_waits_and_retries_when_rate_limited(monkeypatch):
     from app.core import llm as llm_module
 
     monkeypatch.setattr(llm_module.settings, "llm_provider", "google")
+    monkeypatch.setattr(llm_module.settings, "google_model", "single-model")
     waits = []
     monkeypatch.setattr(llm_module.time, "sleep", waits.append)
     limited = llm_module.genai_errors.ClientError(

@@ -271,8 +271,14 @@ class LLM:
                 if e.code == 404 and self._next_model():
                     continue
                 # If an invalid key or permission issue occurs and another key is available, rotate
-                if e.code in (400, 403) and self._next_google_key():
+                if e.code in (400, 401, 403) and self._next_google_key():
                     continue
+                # 503 = high demand / busy; try next key or fallback model if available
+                if e.code == 503:
+                    if self._next_google_key():
+                        continue
+                    if self._next_model():
+                        continue
                 # 429 = rate limit (the free tier allows a few requests a minute), 503 = busy
                 if e.code not in (429, 503) or attempt == GOOGLE_ATTEMPTS:
                     raise LLMError(f"model call failed: {type(e).__name__} {e.code}") from None
