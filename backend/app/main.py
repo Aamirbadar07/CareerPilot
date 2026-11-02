@@ -46,6 +46,17 @@ def llm_failed(request, exc: LLMError):
     return JSONResponse({"detail": "The AI step failed. Please try again."}, status_code=502)
 
 
+@app.get("/")
+def root():
+    return {
+        "status": "online",
+        "service": "CareerPilot API",
+        "version": "0.1.0",
+        "health": "/health",
+        "docs": "/docs",
+    }
+
+
 app.include_router(health.router)
 app.include_router(profiles.router)
 app.include_router(jobs.router)
