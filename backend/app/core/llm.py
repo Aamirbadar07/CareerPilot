@@ -270,9 +270,12 @@ class LLM:
                 # from that point on.
                 if e.code == 404 and self._next_model():
                     continue
-                # If an invalid key or permission issue occurs and another key is available, rotate
-                if e.code in (400, 401, 403) and self._next_google_key():
-                    continue
+                # If an invalid key or permission issue occurs, try next key or fallback model
+                if e.code in (400, 401, 403):
+                    if self._next_google_key():
+                        continue
+                    if self._next_model():
+                        continue
                 # 503 = high demand / busy; try next key or fallback model if available
                 if e.code == 503:
                     if self._next_google_key():
