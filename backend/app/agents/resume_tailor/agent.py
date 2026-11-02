@@ -84,7 +84,7 @@ def _write(llm: LLM, profile: MasterProfile, job: Job, fit: FitReport, feedback:
         TAILOR_PROMPT,
         {
             "master_profile": profile_for_llm(profile),
-            "job": job.model_dump(exclude={"mirrors"}) | {"description": job.description[:3000]},
+            "job": job.model_dump(exclude={"mirrors"}) | {"description": job.description[:2000]},
             "fit_report": fit.model_dump(),
             "experience_length": guard.length_phrase(guard.experience_months(profile)),
             **feedback,

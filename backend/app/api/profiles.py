@@ -40,10 +40,11 @@ def upload_resume(file: UploadFile, db: Session = Depends(get_db), llm: LLM = De
     }
 
 
-@router.get("/profiles/{profile_id}")
+@router.get("/profiles/{profile_id}", dependencies=[Depends(rate_limit(60, 60))])
 def read_profile(profile: MasterProfile = Depends(get_profile), db: Session = Depends(get_db)):
     analysis = repo.get_artifact(db, profile.profile_id, "resume_analysis")
-    expires = db.get(repo.Profile, profile.profile_id).expires_at
+    prof_row = db.get(repo.Profile, profile.profile_id)
+    expires = prof_row.expires_at if prof_row else None
     return {
         "profile": profile,
         "analysis": analysis.data if analysis else None,
@@ -52,7 +53,7 @@ def read_profile(profile: MasterProfile = Depends(get_profile), db: Session = De
     }
 
 
-@router.put("/profiles/{profile_id}/preferences")
+@router.put("/profiles/{profile_id}/preferences", dependencies=[Depends(rate_limit(20, 3600))])
 def update_preferences(
     preferences: Preferences,
     profile: MasterProfile = Depends(get_own_profile),
@@ -64,7 +65,7 @@ def update_preferences(
     return profile
 
 
-@router.delete("/profiles/{profile_id}", status_code=204)
+@router.delete("/profiles/{profile_id}", status_code=204, dependencies=[Depends(rate_limit(10, 3600))])
 def delete_my_data(
     profile: MasterProfile = Depends(get_own_profile), db: Session = Depends(get_db)
 ):

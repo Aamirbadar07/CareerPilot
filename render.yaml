@@ -13,25 +13,26 @@ services:
     # /health answers 200 whenever the process is alive and reports the database in its
     # body, so Render never restarts the service over an outage it cannot fix.
     healthCheckPath: /health
+    autoDeploy: true
     envVars:
       - key: LLM_PROVIDER
         value: google
-      # Entered in the dashboard. GOOGLE_MODEL takes a comma-separated list: Gemini counts
-      # free-tier quota per model, so the next one is used when the one before runs out.
-      - key: GOOGLE_API_KEY
-        sync: false
+      # Default to fast, cost-efficient Gemini models with automatic quota failover
       - key: GOOGLE_MODEL
+        value: gemini-3.8-flash,gemini-2.5-flash
+      # Entered in the dashboard: Gemini API key from Google AI Studio
+      - key: GOOGLE_API_KEY
         sync: false
       - key: ANTHROPIC_API_KEY
         sync: false
-      # Use the Supabase *session pooler* string, not db.<ref>.supabase.co: the direct host
-      # resolves to IPv6 only and Render's outbound traffic is IPv4.
+      # Optional: Supabase *session pooler* string (defaults to SQLite if blank)
       - key: DATABASE_URL
         sync: false
       - key: RAPIDAPI_KEY
         sync: false
+      # Pre-configured to allow the live Vercel frontend and local development
       - key: FRONTEND_ORIGIN
-        sync: false
+        value: https://career-pilot-lac.vercel.app,http://localhost:3000
       # One proxy in front of the app, so the rate limit reads the address Render appends.
       - key: TRUSTED_PROXY_HOPS
         value: "1"

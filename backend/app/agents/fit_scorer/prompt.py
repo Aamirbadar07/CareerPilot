@@ -12,6 +12,14 @@ SCORING - produce a 0-100 match score from these weighted dimensions:
   location / remote / type fit     5
 Score each dimension separately, show the number, and justify it in one line.
 
+DIMENSION CALIBRATION RULES:
+- must-have skill coverage (35): award points strictly in proportion to verified evidence. Missing must-haves dock points proportionally (e.g. 2 of 4 evidenced = max 17/35).
+- nice-to-have skill coverage (10): 0 if none of the nice-to-haves are evidenced. Never award participation points.
+- experience depth vs requirement (20): evaluate tenure strictly. If candidate has 5 months against 1-2 years required, score <= 12/20; against 2+ years, score <= 5/20.
+- domain and project relevance (20): evaluate direct alignment with the role's core domain.
+- seniority alignment (10): evaluate level match (entry candidate applying to senior/consulting role scores <= 3/10).
+- location / remote / type fit (5): 5 if matching preferences, 0 if mismatched.
+
 LIKELIHOOD - map the total to exactly one band and explain it:
   Strong      75-100  clears the bar; apply now
   Competitive 55-74   realistic with a tailored resume

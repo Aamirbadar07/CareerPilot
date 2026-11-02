@@ -28,7 +28,7 @@ export default function TailorPage({ params }: { params: { jobId: string } }) {
   const { result, original } = tailor.data;
   const ok = result.status === "tailored";
   const findings = result.validation?.findings ?? [];
-  const url = `${API}${base}/tailor`;
+  const url = base ? `${API}${base}/tailor` : "";
 
   return (
     <>
@@ -77,11 +77,13 @@ export default function TailorPage({ params }: { params: { jobId: string } }) {
           <h2 className="text-lg font-semibold">Preview</h2>
           <p className="mt-1 text-sm text-muted">The same layout the PDF uses: one page, US Letter.</p>
           {/* Fixed height reserves the space, so the page does not jump when the frame loads. */}
-          <iframe
-            src={`${url}/html`}
-            title="Tailored resume preview"
-            className="mt-3 h-[520px] w-full rounded-lg border border-line"
-          />
+          {url ? (
+            <iframe
+              src={`${url}/html`}
+              title="Tailored resume preview"
+              className="mt-3 h-[520px] w-full rounded-lg border border-line"
+            />
+          ) : null}
         </Card>
       </div>
     </>

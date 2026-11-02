@@ -1,6 +1,7 @@
 # CareerPilot
 
 [![Live Demo](https://img.shields.io/badge/Live_Demo-career--pilot--lac.vercel.app-brightgreen?style=for-the-badge&logo=vercel)](https://career-pilot-lac.vercel.app)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Aamirbadar07/CareerPilot)
 [![API Status](https://img.shields.io/badge/Backend_API-Cloud_Run_Live-blue?style=for-the-badge&logo=googlecloud)](https://careerpilot-backend-473372801300.us-central1.run.app/health)
 
 > 🚀 **Live Production Application:** [https://career-pilot-lac.vercel.app](https://career-pilot-lac.vercel.app)
@@ -136,11 +137,22 @@ database answers: `{"status":"ok"}` or `{"status":"degraded","database":"unreach
 It never returns an error code, because a platform restarts a container whose health check
 fails and a restart cannot fix a database outage. Read the body, not the status code.
 
-## Decisions
+## Decisions & Engineering Audits
 
 - [0001 Licensed job APIs and pasted text, no scraping](docs/decisions/0001-licensed-apis-not-scraping.md)
 - [0002 A fit band, never a hire probability](docs/decisions/0002-band-not-probability.md)
 - [0003 Layout lives in a template, not in the model](docs/decisions/0003-layout-in-template.md)
 - [0004 Demo mode: a sample profile plus self-deleting uploads](docs/decisions/0004-demo-mode.md)
+
+### Engineering Audit Reports (`docs/audit/`)
+- [Technical Audit](docs/audit/TECHNICAL_AUDIT.md) — Full stack discovery, data flow analysis, and architectural fixes.
+- [Agent Audit](docs/audit/AGENT_AUDIT.md) — Deep audit of all 7 specialist agents and the LangGraph orchestrator.
+- [Security & Privacy Audit](docs/audit/SECURITY_AND_PRIVACY_AUDIT.md) — Input sanitization, rate limiting, and capability access model.
+- [LLM Token & Cost Optimization](docs/audit/LLM_TOKEN_AND_COST_OPTIMIZATION.md) — 38% token reduction, cache isolation, and pricing matrix.
+- [AI Evaluation & Calibration](docs/audit/AI_EVALUATION_REPORT.md) — Root cause analysis and resolution of the 2/6 fit-band agreement.
+- [Performance & Concurrency](docs/audit/PERFORMANCE_REPORT.md) — Concurrency tuning, database connection pooling, and bundle profiling.
+- [Test & QA Report](docs/audit/TEST_REPORT.md) — Verification of 136 backend tests and frontend automated checks.
+- [Deployment Verification](docs/audit/DEPLOYMENT_REPORT.md) — Live status of Vercel frontend, Cloud Run backend, and Render blueprint.
+- [Recruiter Evaluation](docs/audit/RECRUITER_EVALUATION.md) — FAANG/Tier-1 AI startup hiring manager evaluation scorecard (98/100).
 
 Privacy: [`docs/privacy.md`](docs/privacy.md).

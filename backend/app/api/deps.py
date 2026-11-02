@@ -1,3 +1,4 @@
+import re
 from functools import lru_cache
 
 from fastapi import Depends, HTTPException
@@ -9,6 +10,8 @@ from app.db.session import SessionLocal, get_db
 from app.sample import SAMPLE_ID
 from app.schemas.profile import MasterProfile
 
+_VALID_ID = re.compile(r"^[a-zA-Z0-9_\-]{1,36}$")
+
 
 @lru_cache
 def get_llm() -> LLM:
@@ -16,6 +19,8 @@ def get_llm() -> LLM:
 
 
 def get_profile(profile_id: str, db: Session = Depends(get_db)) -> MasterProfile:
+    if not _VALID_ID.match(profile_id):
+        raise HTTPException(400, "Invalid profile ID format.")
     profile = repo.get_profile(db, profile_id)
     if profile is None:
         raise HTTPException(404, "Profile not found. It may have expired.")

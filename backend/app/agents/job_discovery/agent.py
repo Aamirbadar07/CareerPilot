@@ -81,7 +81,7 @@ def normalise(
             "phase": "2 - NORMALISE AND DEDUPE",
             "today": today.isoformat(),
             **_candidate(profile),
-            "raw_postings": [p.model_dump() | {"description": p.description[:3000]} for p in raw],
+            "raw_postings": [p.model_dump() | {"description": p.description[:1500]} for p in raw],
         },
         JobDiscoveryResult,
         profile_id=profile.profile_id,

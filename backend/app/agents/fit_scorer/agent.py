@@ -2,7 +2,13 @@ import re
 from concurrent.futures import ThreadPoolExecutor
 
 from app.agents.fit_scorer.prompt import SYSTEM_PROMPT
-from app.agents.fit_scorer.schema import MUST_HAVE_CAP, WEIGHTS, FitReport, band_for
+from app.agents.fit_scorer.schema import (
+    MULTI_MUST_HAVE_CAP,
+    MUST_HAVE_CAP,
+    WEIGHTS,
+    FitReport,
+    band_for,
+)
 from app.agents.job_discovery.schema import Job
 from app.agents.resume_analyzer.schema import profile_ids
 from app.core.config import settings
@@ -29,7 +35,7 @@ def profile_for_llm(profile: MasterProfile) -> dict:
 
 
 def _job_for_llm(job: Job) -> dict:
-    return job.model_dump(exclude={"mirrors"}) | {"description": job.description[:3000]}
+    return job.model_dump(exclude={"mirrors"}) | {"description": job.description[:2000]}
 
 
 def _normalise(skill: str) -> str:
@@ -65,12 +71,13 @@ def score_job(llm: LLM, profile: MasterProfile, job: Job) -> FitReport:
     # Arithmetic, the must-have cap and the band are applied in code, not trusted.
     report.score = sum(d.score for d in report.dimensions)
     must_haves = {_normalise(s) for s in job.must_have}
-    missing_must_have = any(
-        m.type == "blocker" or _normalise(m.skill) in must_haves for m in report.missing
-    )
-    report.capped = missing_must_have and report.score > MUST_HAVE_CAP
+    missing_must_haves = [
+        m for m in report.missing if m.type == "blocker" or _normalise(m.skill) in must_haves
+    ]
+    effective_cap = MULTI_MUST_HAVE_CAP if len(missing_must_haves) >= 2 else MUST_HAVE_CAP
+    report.capped = bool(missing_must_haves) and report.score > effective_cap
     if report.capped:
-        report.score = MUST_HAVE_CAP
+        report.score = effective_cap
     report.band = band_for(report.score)
     return report
 

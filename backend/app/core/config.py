@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     database_url: str = ""
     rapidapi_key: str = ""  # JSearch; the source is skipped when empty
     greenhouse_boards: str = "gitlab"  # comma-separated board tokens
-    frontend_origin: str = "http://localhost:3000"  # the only origin CORS allows
+    frontend_origin: str = "http://localhost:3000"  # the origin(s) CORS allows; comma-separated
     # How many proxies sit in front of the app, each appending one X-Forwarded-For entry.
     # 1 for Cloud Run or Render as they come; 2 behind an extra load balancer or CDN. Only
     # these last entries are trusted, so the per-IP rate limit cannot be reset with a header
@@ -24,6 +24,12 @@ class Settings(BaseSettings):
     trusted_proxy_hops: int = 1
     # Uploaded profiles are deleted after this many hours (docs/decisions/0004-demo-mode.md).
     profile_ttl_hours: int = 24
+
+    @property
+    def frontend_origins(self) -> list[str]:
+        """FRONTEND_ORIGIN as a list of allowed origins, supporting multiple comma-separated URLs."""
+        origins = [o.strip() for o in self.frontend_origin.split(",") if o.strip()]
+        return origins or ["http://localhost:3000"]
 
     @property
     def google_models(self) -> list[str]:

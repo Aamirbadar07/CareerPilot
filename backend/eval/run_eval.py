@@ -30,6 +30,9 @@ PRICES = {
     "claude-sonnet-4-6": (3.0, 15.0),
     "claude-sonnet-5-5": (2.0, 10.0),
     "claude-opus-5-5": (4.0, 20.0),
+    "gemini-3.8-flash": (0.15, 0.60),
+    "gemini-2.5-flash": (0.075, 0.30),
+    "gemini-3.5-flash-lite": (0.075, 0.30),
 }
 
 

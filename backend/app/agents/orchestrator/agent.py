@@ -133,6 +133,7 @@ class Orchestrator:
                         "runnable_now": waiting,
                     },
                     Decision,
+                    profile_id=state.get("profile_id"),
                 )
                 if decision.next in waiting:
                     choice = decision.next

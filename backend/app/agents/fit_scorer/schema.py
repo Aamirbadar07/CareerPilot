@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 
 WEIGHTS = [35, 10, 20, 20, 10, 5]
 MUST_HAVE_CAP = 60
+MULTI_MUST_HAVE_CAP = 54  # 2 or more missing must-haves cannot exceed Stretch band (35-54)
 
 
 def band_for(score: int) -> str:
