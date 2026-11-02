@@ -90,10 +90,14 @@ class LLM:
         self._client_factory = client_factory
         self.cache = cache
         self.provider = settings.llm_provider
-        google = self.provider == "google"
-        # Several models may be configured for Google; they are tried in order as each one
-        # runs out of quota. `model` is whichever is in use now, and goes into the cache key.
-        self.models = settings.google_models if google else [settings.anthropic_model]
+        if self.provider == "google":
+            self.models = settings.google_models
+        elif self.provider == "openrouter":
+            self.models = [settings.openrouter_model]
+        elif self.provider == "deepseek":
+            self.models = [settings.deepseek_model]
+        else:
+            self.models = [settings.anthropic_model]
         self.model = self.models[0]
         self.google_keys = settings.google_api_keys
         self.google_key_index = 0
@@ -104,13 +108,77 @@ class LLM:
         self._usage_lock = threading.Lock()
 
     def _raw(self, system: str, messages: list[dict]) -> str:
-        call = self._google if self.provider == "google" else self._anthropic
+        if self.provider == "google":
+            call = self._google
+        elif self.provider == "openrouter":
+            call = self._openrouter
+        elif self.provider == "deepseek":
+            call = self._deepseek
+        else:
+            call = self._anthropic
         text, tokens_in, tokens_out = call(system, messages)
         with self._usage_lock:
             self.usage["calls"] += 1
             self.usage["input_tokens"] += tokens_in
             self.usage["output_tokens"] += tokens_out
         return text
+
+    def _openai_compatible(
+        self, base_url: str, api_key: str, model: str, system: str, messages: list[dict]
+    ) -> tuple[str, int, int]:
+        import httpx2 as httpx
+
+        if not api_key:
+            raise LLMError(f"no API key configured for {self.provider}")
+        payload = {
+            "model": model,
+            "messages": [{"role": "system", "content": system}] + messages,
+            "response_format": {"type": "json_object"},
+            "temperature": 0.2,
+        }
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        }
+        try:
+            resp = httpx.post(
+                f"{base_url.rstrip('/')}/chat/completions",
+                json=payload,
+                headers=headers,
+                timeout=60.0,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            choice = data["choices"][0]
+            text = choice["message"]["content"]
+            usage = data.get("usage", {})
+            return text, usage.get("prompt_tokens", 0), usage.get("completion_tokens", 0)
+        except (
+            httpx.HTTPStatusError,
+            httpx.RequestError,
+            KeyError,
+            IndexError,
+            json.JSONDecodeError,
+        ) as e:
+            raise LLMError(f"model call failed: {type(e).__name__}") from None
+
+    def _openrouter(self, system: str, messages: list[dict]) -> tuple[str, int, int]:
+        return self._openai_compatible(
+            base_url="https://openrouter.ai/api/v1",
+            api_key=settings.openrouter_api_key,
+            model=self.model,
+            system=system,
+            messages=messages,
+        )
+
+    def _deepseek(self, system: str, messages: list[dict]) -> tuple[str, int, int]:
+        return self._openai_compatible(
+            base_url="https://api.deepseek.com/v1",
+            api_key=settings.deepseek_api_key,
+            model=self.model,
+            system=system,
+            messages=messages,
+        )
 
     def _anthropic(self, system: str, messages: list[dict]) -> tuple[str, int, int]:
         if self._client is None:
@@ -213,9 +281,28 @@ class LLM:
                 except QuotaExhausted:
                     if self._next_google_key():
                         continue  # next key has its own quota, try immediately
-                    if not self._next_model():
-                        raise
-                    continue  # the next model has its own quota, so try it straight away
+                    if self._next_model():
+                        continue  # the next model has its own quota, so try it straight away
+                    if not self._custom_client or getattr(self, "_allow_fallback", False):
+                        if settings.deepseek_api_key:
+                            log.warning("All Google keys and models exhausted; falling back to DeepSeek")
+                            return self._openai_compatible(
+                                base_url="https://api.deepseek.com/v1",
+                                api_key=settings.deepseek_api_key,
+                                model=settings.deepseek_model,
+                                system=system,
+                                messages=messages,
+                            )
+                        if settings.openrouter_api_key:
+                            log.warning("All Google keys and models exhausted; falling back to OpenRouter")
+                            return self._openai_compatible(
+                                base_url="https://openrouter.ai/api/v1",
+                                api_key=settings.openrouter_api_key,
+                                model=settings.openrouter_model,
+                                system=system,
+                                messages=messages,
+                            )
+                    raise
                 # If another key is available, try it before waiting on per-minute rate limit
                 if self._next_google_key():
                     continue

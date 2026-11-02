@@ -6,13 +6,17 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    llm_provider: Literal["anthropic", "google"] = "anthropic"
+    llm_provider: Literal["anthropic", "google", "openrouter", "deepseek"] = "google"
     anthropic_api_key: str = ""
     anthropic_model: str = "claude-sonnet-4-6"
-    google_api_key: str = ""  # a Gemini API key from Google AI Studio
+    google_api_key: str = ""  # a Gemini API key from Google AI Studio (or comma-separated keys)
     # One model, or several separated by commas. Gemini counts its free-tier quota per
     # model, so the next one still has its own when the one before runs out.
     google_model: str = "gemini-3.8-flash"
+    openrouter_api_key: str = ""
+    openrouter_model: str = "deepseek/deepseek-chat"
+    deepseek_api_key: str = ""
+    deepseek_model: str = "deepseek-chat"
     database_url: str = ""
     rapidapi_key: str = ""  # JSearch; the source is skipped when empty
     greenhouse_boards: str = "gitlab"  # comma-separated board tokens

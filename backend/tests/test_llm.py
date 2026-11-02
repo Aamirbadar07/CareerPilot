@@ -59,6 +59,7 @@ def test_google_provider_maps_roles_system_prompt_and_usage(monkeypatch):
     from app.core import llm as llm_module
 
     monkeypatch.setattr(llm_module.settings, "llm_provider", "google")
+    monkeypatch.setattr(llm_module.settings, "google_model", "gemini-3.8-flash")
     seen = {}
 
     def generate_content(model, contents, config):
@@ -141,6 +142,7 @@ def test_google_daily_quota_fails_at_once_instead_of_retrying(monkeypatch):
     from app.core import llm as llm_module
 
     monkeypatch.setattr(llm_module.settings, "llm_provider", "google")
+    monkeypatch.setattr(llm_module.settings, "google_model", "single-model")
     monkeypatch.setattr(llm_module.time, "sleep", lambda s: pytest.fail("must not wait"))
     calls = []
     spent = llm_module.genai_errors.ClientError(
@@ -280,4 +282,39 @@ def test_multiple_google_api_keys_parsing_and_rotation(monkeypatch):
     assert llm.complete("sys", "x", Out) == Out(name="a", n=1)
     assert created_clients == ["key-one", "key-two"]
     assert llm.google_key_index == 1
+
+
+def test_fallback_to_deepseek_when_google_quota_fully_exhausted(monkeypatch):
+    """When all Google models and keys run out of quota, it seamlessly falls back to DeepSeek."""
+    from types import SimpleNamespace as NS
+
+    from app.core import llm as llm_module
+
+    monkeypatch.setattr(llm_module.settings, "llm_provider", "google")
+    monkeypatch.setattr(llm_module.settings, "google_api_key", "one-key")
+    monkeypatch.setattr(llm_module.settings, "google_model", "one-model")
+    monkeypatch.setattr(llm_module.settings, "deepseek_api_key", "sk-deepseek-test")
+
+    spent = llm_module.genai_errors.ClientError(
+        429, {"error": {"message": "You exceeded your current quota. Please retry in 24337.5s."}}
+    )
+
+    def generate_content(**kwargs):
+        raise spent
+
+    client = NS(models=NS(generate_content=generate_content))
+    llm = llm_module.LLM(client=client)
+    llm._allow_fallback = True
+
+    # Mock _openai_compatible to verify fallback call
+    called = []
+
+    def fake_openai(base_url, api_key, model, system, messages):
+        called.append((base_url, api_key, model))
+        return GOOD, 10, 5
+
+    monkeypatch.setattr(llm, "_openai_compatible", fake_openai)
+    assert llm.complete("sys", "x", Out) == Out(name="a", n=1)
+    assert called == [("https://api.deepseek.com/v1", "sk-deepseek-test", "deepseek-chat")]
+
 
