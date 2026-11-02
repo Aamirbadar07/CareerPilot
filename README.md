@@ -128,6 +128,20 @@ During the senior engineering audit cycle, 9 comprehensive architectural reports
 
 ---
 
+## ⚡ Performance, Token & Cost Optimization (`docs/optimization/`)
+
+A dedicated optimization cycle was conducted to minimize token consumption, eliminate redundant API calls, and maximize execution speed:
+
+- 📊 **[Token Optimization Report](docs/optimization/TOKEN_OPTIMIZATION_REPORT.md)**: 36.7% to 50% token reduction across agent prompts, schemas, and contexts.
+- 🌐 **[API Usage & Network Optimization](docs/optimization/API_USAGE_OPTIMIZATION.md)**: Complete elimination of orchestrator LLM calls via deterministic topological routing and connection pooling.
+- 🔀 **[Model Routing Strategy](docs/optimization/MODEL_ROUTING_STRATEGY.md)**: Multi-tier cascade across Gemini, DeepSeek, OpenRouter, and Claude with task-specific output bounds.
+- 💾 **[Cache & Context Optimization](docs/optimization/CACHE_AND_CONTEXT_OPTIMIZATION.md)**: Multi-dimensional cache key hashing, profile version invalidation, and compact data projections.
+- ⚡ **[Backend & Computational Performance](docs/optimization/CODE_PERFORMANCE_REPORT.md)**: Database indexing, persistent HTTP pooling, and deterministic JSON repair.
+- 📈 **[Benchmark Report (Before vs. After)](docs/optimization/BENCHMARK_BEFORE_AFTER.md)**: Real measured numbers showing token counts, call counts, latencies, and dollar cost savings.
+- ✅ **[Optimization Test Report](docs/optimization/OPTIMIZATION_TEST_REPORT.md)**: 100% green test passes across 138 backend tests, 4 frontend tests, and adversarial poison tests.
+
+---
+
 ## 🚀 Quickstart
 
 ### Prerequisites

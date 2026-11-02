@@ -28,6 +28,8 @@ class Settings(BaseSettings):
     trusted_proxy_hops: int = 1
     # Uploaded profiles are deleted after this many hours (docs/decisions/0004-demo-mode.md).
     profile_ttl_hours: int = 24
+    # Deterministic topological priority routing skips unnecessary LLM router calls
+    deterministic_routing: bool = True
 
     @property
     def frontend_origins(self) -> list[str]:

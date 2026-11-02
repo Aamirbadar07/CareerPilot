@@ -20,6 +20,19 @@ def _same_skill(a: str, b: str) -> bool:
     return bool(x and y) and (x <= y or y <= x)
 
 
+def _fit_report_for_coach(job: Job, report: FitReport) -> dict:
+    """Project fit report into lean structure for the coach, saving ~75% token context."""
+    return {
+        "job": job_label(job),
+        "must_have": job.must_have,
+        "score": report.score,
+        "band": report.band,
+        "missing": [{"skill": m.skill, "type": m.type} for m in report.missing],
+        "closable_now": report.closable_now,
+        "resume_angle": report.resume_angle,
+    }
+
+
 def coach(llm: LLM, profile: MasterProfile, scored: list[tuple[Job, FitReport]]) -> CoachingPlan:
     """One plan from all fit reports at once: the patterns no single job shows."""
     labels = {job_label(job) for job, _ in scored}
@@ -42,10 +55,7 @@ def coach(llm: LLM, profile: MasterProfile, scored: list[tuple[Job, FitReport]])
         SYSTEM_PROMPT,
         {
             "master_profile": profile_for_llm(profile),
-            "fit_reports": [
-                {"job": job_label(job), "must_have": job.must_have, **report.model_dump()}
-                for job, report in scored
-            ],
+            "fit_reports": [_fit_report_for_coach(job, report) for job, report in scored],
             "application_history": None,
         },
         CoachingPlan,

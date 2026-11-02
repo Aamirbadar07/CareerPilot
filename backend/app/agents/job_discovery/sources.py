@@ -17,8 +17,16 @@ log = logging.getLogger("careerpilot.jobs")
 # Remotive asks API users to fetch at most about four times a day.
 _TTL_SECONDS = 6 * 3600
 _cache: dict[str, tuple[float, object]] = {}
+_client: httpx.Client | None = None
 _STOPWORDS = {"remote", "job", "jobs", "the", "and", "in", "for", "a", "of"}
 _SENIORITY = {"entry", "level", "junior", "associate", "graduate", "intern", "i", "ii"}
+
+
+def _get_client() -> httpx.Client:
+    global _client
+    if _client is None:
+        _client = httpx.Client(timeout=30.0, follow_redirects=True)
+    return _client
 
 
 def get_json(url: str, params: dict | None = None, headers: dict | None = None):
@@ -26,7 +34,7 @@ def get_json(url: str, params: dict | None = None, headers: dict | None = None):
     hit = _cache.get(key)
     if hit and time.monotonic() - hit[0] < _TTL_SECONDS:
         return hit[1]
-    response = httpx.get(url, params=params, headers=headers, timeout=30, follow_redirects=True)
+    response = _get_client().get(url, params=params, headers=headers)
     response.raise_for_status()
     data = response.json()
     _cache[key] = (time.monotonic(), data)

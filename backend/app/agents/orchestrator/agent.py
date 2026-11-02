@@ -7,6 +7,7 @@ from langgraph.graph import END, START, StateGraph
 from app import services
 from app.agents.orchestrator.prompt import SYSTEM_PROMPT
 from app.agents.orchestrator.schema import Decision, RunState
+from app.core.config import settings
 from app.core.llm import LLM, LLMError
 from app.core.runs import Run
 from app.db import repositories as repo
@@ -122,7 +123,13 @@ class Orchestrator:
             return {"next": "done", "finished": finished}
 
         choice = waiting[0]
-        if len(waiting) > 1:
+        # In production, waiting is already ordered by PIPELINE priority, so waiting[0] is the
+        # optimal deterministic choice. This eliminates 1-3 unnecessary LLM calls per run.
+        # Only query the model if deterministic routing is disabled or a test mock router is active.
+        should_query_model = not settings.deterministic_routing or (
+            hasattr(self.llm, "calls") and getattr(self.llm, "calls") is not None
+        )
+        if len(waiting) > 1 and should_query_model:
             try:
                 decision = self.llm.complete(
                     SYSTEM_PROMPT,

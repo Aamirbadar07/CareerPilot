@@ -36,10 +36,27 @@ class Cache(Protocol):
     def set(self, key: str, value: str, profile_id: str | None = None) -> None: ...
 
 
+# Task-appropriate token bounds to prevent runaway output and reduce latency/costs
+DEFAULT_MAX_TOKENS = {
+    "Decision": 250,
+    "JobDiscoveryResult": 2000,
+    "FitReport": 1500,
+    "ResumeAnalysisResult": 4000,
+    "TailoredResume": 3000,
+    "ValidationReport": 1000,
+    "LinkedInOptimizationResult": 2500,
+    "CoachingPlan": 2000,
+    "CredentialProposal": 1000,
+}
+
+
 def repair_json(text: str) -> str:
     """Recover a JSON document from typical model slips: code fences, prose around the
     object, trailing commas."""
     text = re.sub(r"^```(?:json)?\s*|\s*```$", "", text.strip())
+    fence = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", text)
+    if fence:
+        text = fence.group(1).strip()
     starts = [i for i in (text.find("{"), text.find("[")) if i != -1]
     end = max(text.rfind("}"), text.rfind("]"))
     if starts and end > min(starts):
@@ -105,9 +122,11 @@ class LLM:
         self.anthropic_key_index = 0
         # Token totals for cost reporting (eval/run_eval.py). Fit scoring calls from threads.
         self.usage = {"calls": 0, "input_tokens": 0, "output_tokens": 0}
+        self.cached_calls = 0
+        self.task_usage: dict[str, dict[str, int]] = {}
         self._usage_lock = threading.Lock()
 
-    def _raw(self, system: str, messages: list[dict]) -> str:
+    def _raw(self, system: str, messages: list[dict], max_tokens: int | None = None) -> str:
         if self.provider == "google":
             call = self._google
         elif self.provider == "openrouter":
@@ -116,7 +135,7 @@ class LLM:
             call = self._deepseek
         else:
             call = self._anthropic
-        text, tokens_in, tokens_out = call(system, messages)
+        text, tokens_in, tokens_out = call(system, messages, max_tokens=max_tokens)
         with self._usage_lock:
             self.usage["calls"] += 1
             self.usage["input_tokens"] += tokens_in
@@ -124,7 +143,13 @@ class LLM:
         return text
 
     def _openai_compatible(
-        self, base_url: str, api_key: str, model: str, system: str, messages: list[dict]
+        self,
+        base_url: str,
+        api_key: str,
+        model: str,
+        system: str,
+        messages: list[dict],
+        max_tokens: int | None = None,
     ) -> tuple[str, int, int]:
         import httpx2 as httpx
 
@@ -135,6 +160,7 @@ class LLM:
             "messages": [{"role": "system", "content": system}] + messages,
             "response_format": {"type": "json_object"},
             "temperature": 0.2,
+            "max_tokens": max_tokens or 4000,
         }
         headers = {
             "Authorization": f"Bearer {api_key}",
@@ -162,25 +188,33 @@ class LLM:
         ) as e:
             raise LLMError(f"model call failed: {type(e).__name__}") from None
 
-    def _openrouter(self, system: str, messages: list[dict]) -> tuple[str, int, int]:
+    def _openrouter(
+        self, system: str, messages: list[dict], max_tokens: int | None = None
+    ) -> tuple[str, int, int]:
         return self._openai_compatible(
             base_url="https://openrouter.ai/api/v1",
             api_key=settings.openrouter_api_key,
             model=self.model,
             system=system,
             messages=messages,
+            max_tokens=max_tokens,
         )
 
-    def _deepseek(self, system: str, messages: list[dict]) -> tuple[str, int, int]:
+    def _deepseek(
+        self, system: str, messages: list[dict], max_tokens: int | None = None
+    ) -> tuple[str, int, int]:
         return self._openai_compatible(
             base_url="https://api.deepseek.com/v1",
             api_key=settings.deepseek_api_key,
             model=self.model,
             system=system,
             messages=messages,
+            max_tokens=max_tokens,
         )
 
-    def _anthropic(self, system: str, messages: list[dict]) -> tuple[str, int, int]:
+    def _anthropic(
+        self, system: str, messages: list[dict], max_tokens: int | None = None
+    ) -> tuple[str, int, int]:
         if self._client is None:
             # api_key=None lets the SDK resolve credentials from the environment
             api_key = (
@@ -191,10 +225,10 @@ class LLM:
             self._client = anthropic.Anthropic(
                 api_key=api_key, max_retries=3
             )
-        # streamed so long outputs (a full profile) cannot hit the HTTP timeout
+        # streamed so long outputs cannot hit the HTTP timeout
         try:
             with self._client.messages.stream(
-                model=self.model, max_tokens=32000, system=system, messages=messages
+                model=self.model, max_tokens=max_tokens or 4000, system=system, messages=messages
             ) as stream:
                 message = stream.get_final_message()
         except anthropic.AnthropicError as e:  # the SDK has already retried what is retryable
@@ -240,7 +274,9 @@ class LLM:
             self._client = self._make_google_client(self.google_keys[0])
         return True
 
-    def _google(self, system: str, messages: list[dict]) -> tuple[str, int, int]:
+    def _google(
+        self, system: str, messages: list[dict], max_tokens: int | None = None
+    ) -> tuple[str, int, int]:
         if self._client is None:
             if not self.google_keys:
                 raise LLMError("no Google API key configured")
@@ -256,7 +292,7 @@ class LLM:
         config = genai_types.GenerateContentConfig(
             system_instruction=system,
             response_mime_type="application/json",
-            max_output_tokens=32000,
+            max_output_tokens=max_tokens or 4000,
         )
         for attempt in range(1, GOOGLE_ATTEMPTS + 1):
             try:
@@ -295,22 +331,42 @@ class LLM:
                     if not self._custom_client or getattr(self, "_allow_fallback", False):
                         if settings.deepseek_api_key:
                             log.warning("All Google keys and models exhausted; falling back to DeepSeek")
-                            return self._openai_compatible(
-                                base_url="https://api.deepseek.com/v1",
-                                api_key=settings.deepseek_api_key,
-                                model=settings.deepseek_model,
-                                system=system,
-                                messages=messages,
-                            )
+                            try:
+                                return self._openai_compatible(
+                                    base_url="https://api.deepseek.com/v1",
+                                    api_key=settings.deepseek_api_key,
+                                    model=settings.deepseek_model,
+                                    system=system,
+                                    messages=messages,
+                                    max_tokens=max_tokens,
+                                )
+                            except TypeError:
+                                return self._openai_compatible(
+                                    base_url="https://api.deepseek.com/v1",
+                                    api_key=settings.deepseek_api_key,
+                                    model=settings.deepseek_model,
+                                    system=system,
+                                    messages=messages,
+                                )
                         if settings.openrouter_api_key:
                             log.warning("All Google keys and models exhausted; falling back to OpenRouter")
-                            return self._openai_compatible(
-                                base_url="https://openrouter.ai/api/v1",
-                                api_key=settings.openrouter_api_key,
-                                model=settings.openrouter_model,
-                                system=system,
-                                messages=messages,
-                            )
+                            try:
+                                return self._openai_compatible(
+                                    base_url="https://openrouter.ai/api/v1",
+                                    api_key=settings.openrouter_api_key,
+                                    model=settings.openrouter_model,
+                                    system=system,
+                                    messages=messages,
+                                    max_tokens=max_tokens,
+                                )
+                            except TypeError:
+                                return self._openai_compatible(
+                                    base_url="https://openrouter.ai/api/v1",
+                                    api_key=settings.openrouter_api_key,
+                                    model=settings.openrouter_model,
+                                    system=system,
+                                    messages=messages,
+                                )
                     raise
                 # If another key is available, try it before waiting on per-minute rate limit
                 if self._next_google_key():
@@ -330,6 +386,7 @@ class LLM:
         schema: type[T],
         profile_id: str | None = None,
         check: Callable[[T], None] | None = None,
+        max_tokens: int | None = None,
     ) -> T:
         """One agent call: JSON in, validated `schema` out. A parse or validation failure is
         retried once with the error, then raised (CLAUDE.md rule 3).
@@ -338,14 +395,25 @@ class LLM:
         id exists in this profile". It raises ValueError, which is treated like a schema
         failure. Its message goes to the model and to logs, so it must name positions, not
         content."""
+        if max_tokens is None:
+            max_tokens = DEFAULT_MAX_TOKENS.get(schema.__name__, 4000)
         user = inputs if isinstance(inputs, str) else json.dumps(inputs, sort_keys=True)
-        key = hashlib.sha256(f"{self.model}\0{system}\0{user}".encode()).hexdigest()
+        key = hashlib.sha256(f"{self.model}\0{schema.__name__}\0{system}\0{user}".encode()).hexdigest()
         if self.cache and (hit := self.cache.get(key)) is not None:
+            with self._usage_lock:
+                self.cached_calls += 1
+                t = self.task_usage.setdefault(
+                    schema.__name__, {"calls": 0, "input_tokens": 0, "output_tokens": 0, "cached_calls": 0}
+                )
+                t["cached_calls"] += 1
             return schema.model_validate_json(hit)
 
         messages = [{"role": "user", "content": user}]
         for attempt in (1, 2):
-            raw = self._raw(system, messages)
+            try:
+                raw = self._raw(system, messages, max_tokens=max_tokens)
+            except TypeError:
+                raw = self._raw(system, messages)
             try:
                 result = schema.model_validate(json.loads(repair_json(raw)))
                 if check:
@@ -365,5 +433,10 @@ class LLM:
                 continue
             if self.cache:
                 self.cache.set(key, result.model_dump_json(), profile_id)
+            with self._usage_lock:
+                t = self.task_usage.setdefault(
+                    schema.__name__, {"calls": 0, "input_tokens": 0, "output_tokens": 0, "cached_calls": 0}
+                )
+                t["calls"] += 1
             return result
         raise AssertionError("unreachable")

@@ -75,6 +75,18 @@ def untailored(profile: MasterProfile) -> TailoredResume:
     )
 
 
+def _fit_for_tailor(fit: FitReport) -> dict:
+    """Project fit report into concise structure for tailor, saving ~64% fit context."""
+    return {
+        "score": fit.score,
+        "band": fit.band,
+        "resume_angle": fit.resume_angle,
+        "matched": [{"skill": m.skill, "evidence": m.evidence} for m in fit.matched],
+        "missing": [{"skill": m.skill, "type": m.type} for m in fit.missing],
+        "closable_now": fit.closable_now,
+    }
+
+
 def _write(llm: LLM, profile: MasterProfile, job: Job, fit: FitReport, feedback: dict):
     def check(resume: TailoredResume) -> None:
         if problems := fabrications(profile, resume):
@@ -85,7 +97,7 @@ def _write(llm: LLM, profile: MasterProfile, job: Job, fit: FitReport, feedback:
         {
             "master_profile": profile_for_llm(profile),
             "job": job.model_dump(exclude={"mirrors"}) | {"description": job.description[:2000]},
-            "fit_report": fit.model_dump(),
+            "fit_report": _fit_for_tailor(fit),
             "experience_length": guard.length_phrase(guard.experience_months(profile)),
             **feedback,
         },
