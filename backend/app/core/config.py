@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     google_api_key: str = ""  # a Gemini API key from Google AI Studio (or comma-separated keys)
     # One model, or several separated by commas. Gemini counts its free-tier quota per
     # model, so the next one still has its own when the one before runs out.
-    google_model: str = "gemini-3.8-flash"
+    google_model: str = "gemma-4-26b-a4b-it,gemini-3.8-flash"
     openrouter_api_key: str = ""
     openrouter_model: str = "deepseek/deepseek-chat"
     deepseek_api_key: str = ""

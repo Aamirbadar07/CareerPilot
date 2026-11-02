@@ -19,7 +19,7 @@ services:
         value: google
       # Default to fast, cost-efficient Gemini models with automatic quota failover
       - key: GOOGLE_MODEL
-        value: gemini-3.8-flash,gemma-4-26b-a4b-it
+        value: gemma-4-26b-a4b-it,gemini-3.8-flash
       # Entered in the dashboard: Gemini API key from Google AI Studio (supports multiple comma-separated keys)
       - key: GOOGLE_API_KEY
         sync: false

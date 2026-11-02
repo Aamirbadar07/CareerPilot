@@ -245,7 +245,7 @@ def test_an_empty_google_model_falls_back_to_the_default(monkeypatch):
 
     monkeypatch.setattr(llm_module.settings, "llm_provider", "google")
     monkeypatch.setattr(llm_module.settings, "google_model", "   ")
-    assert llm_module.LLM().model == Settings.model_fields["google_model"].default
+    assert llm_module.LLM().model == llm_module.settings.google_models[0]
 
 
 def test_multiple_google_api_keys_parsing_and_rotation(monkeypatch):
